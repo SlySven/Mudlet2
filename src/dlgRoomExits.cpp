@@ -1571,7 +1571,7 @@ void dlgRoomExits::init( int id ) {
 
     roomID->setText(QString::number(id));
     roomWeight->setText(QString::number(pR->getWeight()));
-    QString titleText = "Exits for Room";
+    QString titleText = "Exits for room";
     if( pR->name.trimmed().length() )
         titleText.append(QString(" \"%1\" [*]").arg( pR->name ));
     else
