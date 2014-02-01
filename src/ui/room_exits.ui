@@ -2094,7 +2094,7 @@ Locked</string>
         <column>
          <property name="text">
           <string>Command
-or LUA script</string>
+or Lua script</string>
          </property>
          <property name="toolTip">
           <string>(Lua scripts need to be prefixed with &quot;script:&quot;)</string>
@@ -2179,17 +2179,17 @@ or LUA script</string>
   </property>
  </designerdata>
  <buttongroups>
+  <buttongroup name="doortype_out"/>
+  <buttongroup name="doortype_s"/>
   <buttongroup name="doortype_e"/>
   <buttongroup name="doortype_ne"/>
   <buttongroup name="doortype_w"/>
   <buttongroup name="doortype_nw"/>
   <buttongroup name="doortype_se"/>
   <buttongroup name="doortype_sw"/>
-  <buttongroup name="doortype_out"/>
+  <buttongroup name="doortype_down"/>
   <buttongroup name="doortype_up"/>
   <buttongroup name="doortype_in"/>
   <buttongroup name="doortype_n"/>
-  <buttongroup name="doortype_s"/>
-  <buttongroup name="doortype_down"/>
  </buttongroups>
 </ui>
