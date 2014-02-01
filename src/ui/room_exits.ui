@@ -78,7 +78,7 @@
             <cursorShape>PointingHandCursor</cursorShape>
            </property>
            <property name="toolTip">
-            <string>Create an exit in this direction with unknown distination, mutually exclusive with an actual exit roomID</string>
+            <string>Create an exit in this direction with unknown destination, mutually exclusive with an actual exit roomID</string>
            </property>
            <property name="text">
             <string/>
@@ -218,7 +218,7 @@
             <cursorShape>PointingHandCursor</cursorShape>
            </property>
            <property name="toolTip">
-            <string>Create an exit in this direction with unknown distination, mutually exclusive with an actual exit roomID</string>
+            <string>Create an exit in this direction with unknown destination, mutually exclusive with an actual exit roomID</string>
            </property>
            <property name="text">
             <string/>
@@ -358,7 +358,7 @@
             <cursorShape>PointingHandCursor</cursorShape>
            </property>
            <property name="toolTip">
-            <string>Create an exit in this direction with unknown distination, mutually exclusive with an actual exit roomID</string>
+            <string>Create an exit in this direction with unknown destination, mutually exclusive with an actual exit roomID</string>
            </property>
            <property name="text">
             <string/>
@@ -498,7 +498,7 @@
             <cursorShape>PointingHandCursor</cursorShape>
            </property>
            <property name="toolTip">
-            <string>Create an exit in this direction with unknown distination, mutually exclusive with an actual exit roomID</string>
+            <string>Create an exit in this direction with unknown destination, mutually exclusive with an actual exit roomID</string>
            </property>
            <property name="text">
             <string/>
@@ -638,7 +638,7 @@
             <cursorShape>PointingHandCursor</cursorShape>
            </property>
            <property name="toolTip">
-            <string>Create an exit in this direction with unknown distination, mutually exclusive with an actual exit roomID</string>
+            <string>Create an exit in this direction with unknown destination, mutually exclusive with an actual exit roomID</string>
            </property>
            <property name="text">
             <string/>
@@ -854,7 +854,7 @@
             <cursorShape>PointingHandCursor</cursorShape>
            </property>
            <property name="toolTip">
-            <string>Create an exit in this direction with unknown distination, mutually exclusive with an actual exit roomID</string>
+            <string>Create an exit in this direction with unknown destination, mutually exclusive with an actual exit roomID</string>
            </property>
            <property name="text">
             <string/>
@@ -988,7 +988,7 @@
             <cursorShape>PointingHandCursor</cursorShape>
            </property>
            <property name="toolTip">
-            <string>Create an exit in this direction with unknown distination, mutually exclusive with an actual exit roomID</string>
+            <string>Create an exit in this direction with unknown destination, mutually exclusive with an actual exit roomID</string>
            </property>
            <property name="text">
             <string/>
@@ -1140,7 +1140,7 @@
             <cursorShape>PointingHandCursor</cursorShape>
            </property>
            <property name="toolTip">
-            <string>Create an exit in this direction with unknown distination, mutually exclusive with an actual exit roomID</string>
+            <string>Create an exit in this direction with unknown destination, mutually exclusive with an actual exit roomID</string>
            </property>
            <property name="text">
             <string/>
@@ -1286,7 +1286,7 @@
             <cursorShape>PointingHandCursor</cursorShape>
            </property>
            <property name="toolTip">
-            <string>Create an exit in this direction with unknown distination, mutually exclusive with an actual exit roomID</string>
+            <string>Create an exit in this direction with unknown destination, mutually exclusive with an actual exit roomID</string>
            </property>
            <property name="text">
             <string/>
@@ -1426,7 +1426,7 @@
             <cursorShape>PointingHandCursor</cursorShape>
            </property>
            <property name="toolTip">
-            <string>Create an exit in this direction with unknown distination, mutually exclusive with an actual exit roomID</string>
+            <string>Create an exit in this direction with unknown destination, mutually exclusive with an actual exit roomID</string>
            </property>
            <property name="text">
             <string/>
@@ -1566,7 +1566,7 @@
             <cursorShape>PointingHandCursor</cursorShape>
            </property>
            <property name="toolTip">
-            <string>Create an exit in this direction with unknown distination, mutually exclusive with an actual exit roomID</string>
+            <string>Create an exit in this direction with unknown destination, mutually exclusive with an actual exit roomID</string>
            </property>
            <property name="text">
             <string/>
@@ -1706,7 +1706,7 @@
             <cursorShape>PointingHandCursor</cursorShape>
            </property>
            <property name="toolTip">
-            <string>Create an exit in this direction with unknown distination, mutually exclusive with an actual exit roomID</string>
+            <string>Create an exit in this direction with unknown destination, mutually exclusive with an actual exit roomID</string>
            </property>
            <property name="text">
             <string/>
