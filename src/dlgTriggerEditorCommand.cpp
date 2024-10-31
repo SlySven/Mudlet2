@@ -3,13 +3,17 @@
 #include "LuaInterface.h"
 #include "dlgTriggerEditor.h"
 #include "dlgTriggerPatternEdit.h"
+#include "dlgAliasMainArea.h"
+#include "dlgScriptsMainArea.h"
+#include "dlgKeysMainArea.h"
+#include "dlgActionMainArea.h"
 #include "mudlet.h"
 #include <QPointer>
 
-AddTriggerCommand::AddTriggerCommand(QTreeWidgetItem* pItem, TriggerUnit* triggerUnit, TTreeWidget* treeWidget_triggers, bool isFolder, QUndoCommand* parent) : QUndoCommand(parent)
+AddTriggerCommand::AddTriggerCommand(QTreeWidgetItem* pItem, TriggerUnit* triggerUnit, TTreeWidget* treeWidgetTriggers, bool isFolder, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpTriggerUnit = triggerUnit;
-    mpTreeWidget_triggers = treeWidget_triggers;
+    mpTreeWidgetTriggers = treeWidgetTriggers;
     mIsFolder = isFolder;
     mpItem = pItem;
 }
@@ -35,7 +39,7 @@ void AddTriggerCommand::redo()
     }
     if (!mpItem) {
         mpEditor->addTrigger(mIsFolder);
-        mpItem = mpTreeWidget_triggers->currentItem();
+        mpItem = mpTreeWidgetTriggers->currentItem();
         mpParent = mpItem->parent();
     } else {
         int count = mpParent->childCount();
@@ -49,12 +53,12 @@ void AddTriggerCommand::redo()
     setText(QObject::tr("Add Trigger"));
 }
 
-DeleteTriggerCommand::DeleteTriggerCommand(QTreeWidgetItem* pItem, TriggerUnit* triggerUnit, TTreeWidget* treeWidget_triggers, QUndoCommand* parent) : QUndoCommand(parent)
+DeleteTriggerCommand::DeleteTriggerCommand(QTreeWidgetItem* pItem, TriggerUnit* triggerUnit, TTreeWidget* treeWidgetTriggers, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpItem = pItem;
     mpParent = mpItem->parent();
     mpTriggerUnit = triggerUnit;
-    mpTreeWidget_triggers = treeWidget_triggers;
+    mpTreeWidgetTriggers = treeWidgetTriggers;
 }
 
 void DeleteTriggerCommand::undo()
@@ -68,7 +72,7 @@ void DeleteTriggerCommand::undo()
         const int childID = mpItemTrigger->getID();
         mpItem->setData(0, Qt::UserRole, childID);
         mpParent->insertChild(mpParent->childCount() <= 0 ? 0 : mpParent->childCount(), mpItem);
-        mpTreeWidget_triggers->setCurrentItem(mpItem);
+        mpTreeWidgetTriggers->setCurrentItem(mpItem);
     } else {
         qDebug() << "parent is null ";
     }
@@ -93,7 +97,7 @@ void DeleteTriggerCommand::redo()
 }
 
 MoveTriggerCommand::MoveTriggerCommand(TriggerUnit* triggerUnit,
-                                       TTreeWidget* treeWidget_triggers,
+                                       TTreeWidget* treeWidgetTriggers,
                                        int childID,
                                        int oldParentID,
                                        int newParentID,
@@ -112,7 +116,7 @@ MoveTriggerCommand::MoveTriggerCommand(TriggerUnit* triggerUnit,
     mPrevParentPosition = prevParentPosition;
     mPrevChildPosition = prevChildPosition;
     mpTriggerUnit = triggerUnit;
-    mpTreeWidget_triggers = treeWidget_triggers;
+    mpTreeWidgetTriggers = treeWidgetTriggers;
 }
 
 void MoveTriggerCommand::undo()
@@ -124,7 +128,7 @@ void MoveTriggerCommand::undo()
     mpHost->getTriggerUnit()->reParentTrigger(mChildID, mNewParentID, mOldParentID, mPrevParentPosition, mPrevChildPosition);
     mpParentItem->removeChild(mpItem);
     mpPrevParentItem->insertChild(mpPrevParentItem->childCount() <= 0 ? 0 : mpParentItem->childCount(), mpItem);
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
 }
 
 void MoveTriggerCommand::redo()
@@ -144,7 +148,7 @@ void MoveTriggerCommand::redo()
 AddAliasCommand::AddAliasCommand(QTreeWidgetItem* pItem, AliasUnit* aliasUnit, TTreeWidget* treeWidget_aliases, bool isFolder, QUndoCommand* parent)
 {
     mpAliasUnit = aliasUnit;
-    mpTreeWidget_aliases = treeWidget_aliases;
+    mpTreeWidgetAliases = treeWidget_aliases;
     mIsFolder = isFolder;
     mpItem = pItem;
 }
@@ -170,7 +174,7 @@ void AddAliasCommand::redo()
     }
     if (!mpItem) {
         mpEditor->addAlias(mIsFolder);
-        mpItem = mpTreeWidget_aliases->currentItem();
+        mpItem = mpTreeWidgetAliases->currentItem();
         mpParent = mpItem->parent();
     } else {
         int count = mpParent->childCount();
@@ -189,7 +193,7 @@ DeleteAliasCommand::DeleteAliasCommand(QTreeWidgetItem* pItem, AliasUnit* aliasU
     mpItem = pItem;
     mpParent = mpItem->parent();
     mpAliasUnit = aliasUnit;
-    mpTreeWidget_aliases = treeWidget_aliases;
+    mpTreeWidgetAliases = treeWidget_aliases;
 }
 
 void DeleteAliasCommand::undo()
@@ -203,7 +207,7 @@ void DeleteAliasCommand::undo()
         const int childID = mpItemAlias->getID();
         mpItem->setData(0, Qt::UserRole, childID);
         mpParent->insertChild(mpParent->childCount() <= 0 ? 0 : mpParent->childCount(), mpItem);
-        mpTreeWidget_aliases->setCurrentItem(mpItem);
+        mpTreeWidgetAliases->setCurrentItem(mpItem);
     } else {
         qDebug() << "parent is null ";
     }
@@ -248,7 +252,7 @@ MoveAliasCommand::MoveAliasCommand(AliasUnit* aliasUnit,
     mPrevParentPosition = prevParentPosition;
     mPrevChildPosition = prevChildPosition;
     mpAliasUnit = aliasUnit;
-    mpTreeWidget_aliases = treeWidget_aliases;
+    mpTreeWidgetAliases = treeWidget_aliases;
 }
 
 void MoveAliasCommand::undo()
@@ -260,7 +264,7 @@ void MoveAliasCommand::undo()
     mpHost->getAliasUnit()->reParentAlias(mChildID, mNewParentID, mOldParentID, mPrevParentPosition, mPrevChildPosition);
     mpParentItem->removeChild(mpItem);
     mpPrevParentItem->insertChild(mpPrevParentItem->childCount() <= 0 ? 0 : mpPrevParentItem->childCount(), mpItem);
-    mpTreeWidget_aliases->setCurrentItem(mpItem);
+    mpTreeWidgetAliases->setCurrentItem(mpItem);
 }
 
 void MoveAliasCommand::redo()
@@ -277,10 +281,82 @@ void MoveAliasCommand::redo()
     setText(QObject::tr("Move Alias"));
 }
 
-AddTimerCommand::AddTimerCommand(QTreeWidgetItem* pItem, TimerUnit* timerUnit, TTreeWidget* treeWidget_timers, bool isFolder, QUndoCommand* parent)
+AliasNameTextEditedCommand::AliasNameTextEditedCommand(dlgAliasMainArea* mpAliasMainArea, QUndoCommand* parent)
+{
+    mpAliasMainArea = mpAliasMainArea;
+}
+
+void AliasNameTextEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetAliases->setCurrentItem(mpItem);
+    mpAliasMainArea->lineEdit_alias_name->setText(mPrevAliasName);
+}
+
+void AliasNameTextEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetAliases->setCurrentItem(mpItem);
+    mpAliasMainArea->lineEdit_alias_name->setText(mAliasName);
+    setText(QObject::tr("Edit alias name"));
+}
+
+AliasCommandTextEditedCommand::AliasCommandTextEditedCommand(dlgAliasMainArea* mpAliasMainArea, QUndoCommand* parent)
+{
+    mpAliasMainArea = mpAliasMainArea;
+}
+
+void AliasCommandTextEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetAliases->setCurrentItem(mpItem);
+    mpAliasMainArea->lineEdit_alias_command->setText(mPrevAliasCommand);
+}
+
+void AliasCommandTextEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetAliases->setCurrentItem(mpItem);
+    mpAliasMainArea->lineEdit_alias_command->setText(mAliasCommand);
+    setText(QObject::tr("Edit alias command"));
+}
+
+AliasPatternTextEditedCommand::AliasPatternTextEditedCommand(dlgAliasMainArea* mpAliasMainArea, QUndoCommand* parent)
+{
+    mpAliasMainArea = mpAliasMainArea;
+}
+
+void AliasPatternTextEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetAliases->setCurrentItem(mpItem);
+    mpAliasMainArea->lineEdit_alias_pattern->setText(mPrevAliasPattern);
+}
+
+void AliasPatternTextEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetAliases->setCurrentItem(mpItem);
+    mpAliasMainArea->lineEdit_alias_pattern->setText(mAliasPattern);
+    setText(QObject::tr("Edit alias pattern"));
+}
+
+AddTimerCommand::AddTimerCommand(QTreeWidgetItem* pItem, TimerUnit* timerUnit, TTreeWidget* treeWidgetTimers, bool isFolder, QUndoCommand* parent)
 {
     mpTimerUnit = timerUnit;
-    mpTreeWidget_timers = treeWidget_timers;
+    mpTreeWidgetTimers = treeWidgetTimers;
     mIsFolder = isFolder;
     mpItem = pItem;
 }
@@ -306,7 +382,7 @@ void AddTimerCommand::redo()
     }
     if (!mpItem) {
         mpEditor->addTimer(mIsFolder);
-        mpItem = mpTreeWidget_timers->currentItem();
+        mpItem = mpTreeWidgetTimers->currentItem();
         mpParent = mpItem->parent();
     } else {
         int count = mpParent->childCount();
@@ -320,12 +396,12 @@ void AddTimerCommand::redo()
     setText(QObject::tr("Add Timer"));
 }
 
-DeleteTimerCommand::DeleteTimerCommand(QTreeWidgetItem* pItem, TimerUnit* timerUnit, TTreeWidget* treeWidget_timers, QUndoCommand* parent) : QUndoCommand(parent)
+DeleteTimerCommand::DeleteTimerCommand(QTreeWidgetItem* pItem, TimerUnit* timerUnit, TTreeWidget* treeWidgetTimers, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpItem = pItem;
     mpParent = mpItem->parent();
     mpTimerUnit = timerUnit;
-    mpTreeWidget_timers = treeWidget_timers;
+    mpTreeWidgetTimers = treeWidgetTimers;
 }
 
 void DeleteTimerCommand::undo()
@@ -339,7 +415,7 @@ void DeleteTimerCommand::undo()
         const int childID = mpItemTimer->getID();
         mpItem->setData(0, Qt::UserRole, childID);
         mpParent->insertChild(mpParent->childCount() <= 0 ? 0 : mpParent->childCount(), mpItem);
-        mpTreeWidget_timers->setCurrentItem(mpItem);
+        mpTreeWidgetTimers->setCurrentItem(mpItem);
     } else {
         qDebug() << "parent is null ";
     }
@@ -365,7 +441,7 @@ void DeleteTimerCommand::redo()
 }
 
 MoveTimerCommand::MoveTimerCommand(TimerUnit* timerUnit,
-                                   TTreeWidget* treeWidget_timers,
+                                   TTreeWidget* treeWidgetTimers,
                                    int childID,
                                    int oldParentID,
                                    int newParentID,
@@ -384,7 +460,7 @@ MoveTimerCommand::MoveTimerCommand(TimerUnit* timerUnit,
     mPrevParentPosition = prevParentPosition;
     mPrevChildPosition = prevChildPosition;
     mpTimerUnit = timerUnit;
-    mpTreeWidget_timers = treeWidget_timers;
+    mpTreeWidgetTimers = treeWidgetTimers;
 }
 
 void MoveTimerCommand::undo()
@@ -396,7 +472,7 @@ void MoveTimerCommand::undo()
     mpHost->getTimerUnit()->reParentTimer(mChildID, mNewParentID, mOldParentID, mPrevParentPosition, mPrevChildPosition);
     mpParentItem->removeChild(mpItem);
     mpPrevParentItem->insertChild(mpPrevParentItem->childCount() <= 0 ? 0 : mpPrevParentItem->childCount(), mpItem);
-    mpTreeWidget_timers->setCurrentItem(mpItem);
+    mpTreeWidgetTimers->setCurrentItem(mpItem);
 }
 
 void MoveTimerCommand::redo()
@@ -413,10 +489,170 @@ void MoveTimerCommand::redo()
     setText(QObject::tr("Move Timer"));
 }
 
+TimerNameTextEditedCommand::TimerNameTextEditedCommand(dlgTimersMainArea* timersMainArea, QUndoCommand* parent)
+{
+    mpTimersMainArea = timersMainArea;
+}
+
+void TimerNameTextEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetTimers->setCurrentItem(mpItem);
+    mpTimersMainArea->lineEdit_timer_name->setText(mPrevTimerName);
+}
+
+void TimerNameTextEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetTimers->setCurrentItem(mpItem);
+    mpTimersMainArea->lineEdit_timer_name->setText(mTimerName);
+    setText(QObject::tr("Edit timer name"));
+}
+
+TimerCommandTextEditedCommand::TimerCommandTextEditedCommand(dlgTimersMainArea* timersMainArea, QUndoCommand* parent)
+{
+    mpTimersMainArea = timersMainArea;
+}
+
+void TimerCommandTextEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetTimers->setCurrentItem(mpItem);
+    mpTimersMainArea->lineEdit_timer_command->setText(mPrevTimerCommand);
+}
+
+void TimerCommandTextEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetTimers->setCurrentItem(mpItem);
+    mpTimersMainArea->lineEdit_timer_command->setText(mTimerCommand);
+    setText(QObject::tr("Edit timer command"));
+}
+
+TimerHoursTextEditedCommand::TimerHoursTextEditedCommand(dlgTimersMainArea* timersMainArea, QUndoCommand* parent)
+{
+    mpTimersMainArea = timersMainArea;
+}
+
+void TimerHoursTextEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetTimers->setCurrentItem(mpItem);
+    mpTimersMainArea->timeEdit_timer_hours->blockSignals(true);
+    mpTimersMainArea->timeEdit_timer_hours->setTime(QTime(mPrevTimerHours, 0, 0, 0));
+    mpTimersMainArea->timeEdit_timer_hours->blockSignals(false);
+}
+
+void TimerHoursTextEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetTimers->setCurrentItem(mpItem);
+    mpTimersMainArea->timeEdit_timer_hours->blockSignals(true);
+    mpTimersMainArea->timeEdit_timer_hours->setTime(QTime(mTimerHours, 0, 0, 0));
+    mpTimersMainArea->timeEdit_timer_hours->blockSignals(false);
+    setText(QObject::tr("Edit timer hours"));
+}
+
+TimerMinutesTextEditedCommand::TimerMinutesTextEditedCommand(dlgTimersMainArea* timersMainArea, QUndoCommand* parent)
+{
+    mpTimersMainArea = timersMainArea;
+}
+
+void TimerMinutesTextEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetTimers->setCurrentItem(mpItem);
+    mpTimersMainArea->timeEdit_timer_minutes->blockSignals(true);
+    mpTimersMainArea->timeEdit_timer_minutes->setTime(QTime(0, mPrevTimerMinutes, 0, 0));
+    mpTimersMainArea->timeEdit_timer_minutes->blockSignals(false);
+}
+
+void TimerMinutesTextEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetTimers->setCurrentItem(mpItem);
+    mpTimersMainArea->timeEdit_timer_minutes->blockSignals(true);
+    mpTimersMainArea->timeEdit_timer_minutes->setTime(QTime(0, mTimerMinutes, 0, 0));
+    mpTimersMainArea->timeEdit_timer_minutes->blockSignals(false);
+    setText(QObject::tr("Edit timer minutes"));
+}
+
+TimerSecondsTextEditedCommand::TimerSecondsTextEditedCommand(dlgTimersMainArea* timersMainArea, QUndoCommand* parent)
+{
+    mpTimersMainArea = timersMainArea;
+}
+
+void TimerSecondsTextEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetTimers->setCurrentItem(mpItem);
+    mpTimersMainArea->timeEdit_timer_seconds->blockSignals(true);
+    mpTimersMainArea->timeEdit_timer_seconds->setTime(QTime(0, 0, mPrevTimerSeconds, 0));
+    mpTimersMainArea->timeEdit_timer_seconds->blockSignals(false);
+}
+
+void TimerSecondsTextEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetTimers->setCurrentItem(mpItem);
+    mpTimersMainArea->timeEdit_timer_seconds->blockSignals(true);
+    mpTimersMainArea->timeEdit_timer_seconds->setTime(QTime(0, 0, mTimerSeconds, 0));
+    mpTimersMainArea->timeEdit_timer_seconds->blockSignals(false);
+    setText(QObject::tr("Edit timer seconds"));
+}
+
+TimerMilliSecondsTextEditedCommand::TimerMilliSecondsTextEditedCommand(dlgTimersMainArea* timersMainArea, QUndoCommand* parent)
+{
+    mpTimersMainArea = timersMainArea;
+}
+
+void TimerMilliSecondsTextEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetTimers->setCurrentItem(mpItem);
+    mpTimersMainArea->timeEdit_timer_msecs->blockSignals(true);
+    mpTimersMainArea->timeEdit_timer_msecs->setTime(QTime(0, 0, 0, mPrevTimerMsecs));
+    mpTimersMainArea->timeEdit_timer_msecs->blockSignals(false);
+}
+
+void TimerMilliSecondsTextEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetTimers->setCurrentItem(mpItem);
+    mpTimersMainArea->timeEdit_timer_msecs->blockSignals(true);
+    mpTimersMainArea->timeEdit_timer_msecs->setTime(QTime(0, 0, 0, mTimerMsecs));
+    mpTimersMainArea->timeEdit_timer_msecs->blockSignals(false);
+    setText(QObject::tr("Edit timer msecs"));
+}
+
 AddScriptCommand::AddScriptCommand(QTreeWidgetItem* pItem, ScriptUnit* scriptUnit, TTreeWidget* treeWidget_scripts, bool isFolder, QUndoCommand* parent)
 {
     mpScriptUnit = scriptUnit;
-    mpTreeWidget_scripts = treeWidget_scripts;
+    mpTreeWidgetScripts = treeWidget_scripts;
     mIsFolder = isFolder;
     mpItem = pItem;
 }
@@ -442,7 +678,7 @@ void AddScriptCommand::redo()
     }
     if (!mpItem) {
         mpEditor->addScript(mIsFolder);
-        mpItem = mpTreeWidget_scripts->currentItem();
+        mpItem = mpTreeWidgetScripts->currentItem();
         mpParent = mpItem->parent();
     } else {
         int count = mpParent->childCount();
@@ -461,7 +697,7 @@ DeleteScriptCommand::DeleteScriptCommand(QTreeWidgetItem* pItem, ScriptUnit* scr
     mpItem = pItem;
     mpParent = mpItem->parent();
     mpScriptUnit = scriptUnit;
-    mpTreeWidget_scripts = treeWidget_scripts;
+    mpTreeWidgetScripts = treeWidget_scripts;
 }
 
 void DeleteScriptCommand::undo()
@@ -475,7 +711,7 @@ void DeleteScriptCommand::undo()
         const int childID = mpItemScript->getID();
         mpItem->setData(0, Qt::UserRole, childID);
         mpParent->insertChild(mpParent->childCount() <= 0 ? 0 : mpParent->childCount(), mpItem);
-        mpTreeWidget_scripts->setCurrentItem(mpItem);
+        mpTreeWidgetScripts->setCurrentItem(mpItem);
     } else {
         qDebug() << "parent is null ";
     }
@@ -520,7 +756,7 @@ MoveScriptCommand::MoveScriptCommand(ScriptUnit* scriptUnit,
     mPrevParentPosition = prevParentPosition;
     mPrevChildPosition = prevChildPosition;
     mpScriptUnit = scriptUnit;
-    mpTreeWidget_scripts = treeWidget_scripts;
+    mpTreeWidgetScripts = treeWidget_scripts;
 }
 
 void MoveScriptCommand::undo()
@@ -532,7 +768,7 @@ void MoveScriptCommand::undo()
     mpHost->getScriptUnit()->reParentScript(mChildID, mNewParentID, mOldParentID, mPrevParentPosition, mPrevChildPosition);
     mpParentItem->removeChild(mpItem);
     mpPrevParentItem->insertChild(mpPrevParentItem->childCount() <= 0 ? 0 : mpPrevParentItem->childCount(), mpItem);
-    mpTreeWidget_scripts->setCurrentItem(mpItem);
+    mpTreeWidgetScripts->setCurrentItem(mpItem);
 }
 
 void MoveScriptCommand::redo()
@@ -549,10 +785,96 @@ void MoveScriptCommand::redo()
     setText(QObject::tr("Move Script"));
 }
 
+ScriptNameTextEditedCommand::ScriptNameTextEditedCommand(dlgScriptsMainArea* scriptsMainArea, QUndoCommand* parent)
+{
+    mpScriptsMainArea = scriptsMainArea;
+}
+
+void ScriptNameTextEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetScripts->setCurrentItem(mpItem);
+    mpScriptsMainArea->lineEdit_script_name->setText(mPrevScriptName);
+}
+
+void ScriptNameTextEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetScripts->setCurrentItem(mpItem);
+    mpScriptsMainArea->lineEdit_script_name->setText(mScriptName);
+    setText(QObject::tr("Edit script name"));
+}
+
+ScriptAddHandlerCommand::ScriptAddHandlerCommand(dlgScriptsMainArea* scriptsMainArea, QUndoCommand* parent)
+{
+    mpScriptsMainArea = scriptsMainArea;
+}
+
+void ScriptAddHandlerCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetScripts->setCurrentItem(mpItem);
+    auto pItem = new QListWidgetItem;
+    pItem->setText(mPrevScriptEventhandler);
+    mpScriptsMainArea->listWidget_script_registered_event_handlers->takeItem(mRow);
+}
+
+void ScriptAddHandlerCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetScripts->setCurrentItem(mpItem);
+    auto pItem = new QListWidgetItem;
+    pItem->setText(mScriptEventhandler);
+    mpScriptsMainArea->listWidget_script_registered_event_handlers->addItem(pItem);
+    mpWidgetItem = pItem;
+    mRow = mpScriptsMainArea->listWidget_script_registered_event_handlers->indexFromItem(pItem).row();
+    mpScriptsMainArea->listWidget_script_registered_event_handlers->setCurrentRow(mRow);
+    setText(QObject::tr("Add script handler"));
+}
+
+ScriptRemoveHandlerCommand::ScriptRemoveHandlerCommand(dlgScriptsMainArea* scriptsMainArea, QUndoCommand* parent)
+{
+    mpScriptsMainArea = scriptsMainArea;
+}
+
+void ScriptRemoveHandlerCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetScripts->setCurrentItem(mpItem);
+    mpScriptsMainArea->listWidget_script_registered_event_handlers->addItem(mpWidgetItem);
+    mRow = mpScriptsMainArea->listWidget_script_registered_event_handlers->indexFromItem(mpWidgetItem).row();
+    mpScriptsMainArea->listWidget_script_registered_event_handlers->setCurrentRow(mRow);
+}
+
+void ScriptRemoveHandlerCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetScripts->setCurrentItem(mpItem);
+    mRow = mpScriptsMainArea->listWidget_script_registered_event_handlers->currentRow();
+    if(mRow < 0)
+    {
+        return;
+    }
+    mpWidgetItem = mpScriptsMainArea->listWidget_script_registered_event_handlers->takeItem(mRow);
+    setText(QObject::tr("Remove script handler"));
+}
+
 AddKeyCommand::AddKeyCommand(QTreeWidgetItem* pItem, KeyUnit* keyUnit, TTreeWidget* treeWidget_keys, bool isFolder, QUndoCommand* parent)
 {
     mpKeyUnit = keyUnit;
-    mpTreeWidget_keys = treeWidget_keys;
+    mpTreeWidgetKeys = treeWidget_keys;
     mIsFolder = isFolder;
     mpItem = pItem;
 }
@@ -578,7 +900,7 @@ void AddKeyCommand::redo()
     }
     if (!mpItem) {
         mpEditor->addKey(mIsFolder);
-        mpItem = mpTreeWidget_keys->currentItem();
+        mpItem = mpTreeWidgetKeys->currentItem();
         mpParent = mpItem->parent();
     } else {
         int count = mpParent->childCount();
@@ -597,7 +919,7 @@ DeleteKeyCommand::DeleteKeyCommand(QTreeWidgetItem* pItem, KeyUnit* keyUnit, TTr
     mpItem = pItem;
     mpParent = mpItem->parent();
     mpKeyUnit = keyUnit;
-    mpTreeWidget_keys = treeWidget_keys;
+    mpTreeWidgetKeys = treeWidget_keys;
 }
 
 void DeleteKeyCommand::undo()
@@ -611,7 +933,7 @@ void DeleteKeyCommand::undo()
         const int childID = mpItemKey->getID();
         mpItem->setData(0, Qt::UserRole, childID);
         mpParent->insertChild(mpParent->childCount() <= 0 ? 0 : mpParent->childCount(), mpParent);
-        mpTreeWidget_keys->setCurrentItem(mpItem);
+        mpTreeWidgetKeys->setCurrentItem(mpItem);
     } else {
         qDebug() << "parent is null ";
     }
@@ -655,7 +977,7 @@ MoveKeyCommand::MoveKeyCommand(KeyUnit* keyUnit,
     mPrevParentPosition = prevParentPosition;
     mPrevChildPosition = prevChildPosition;
     mpKeyUnit = keyUnit;
-    mpTreeWidget_keys = treeWidget_keys;
+    mpTreeWidgetKeys = treeWidget_keys;
 }
 
 void MoveKeyCommand::undo()
@@ -667,7 +989,7 @@ void MoveKeyCommand::undo()
     mpHost->getKeyUnit()->reParentKey(mChildID, mNewParentID, mOldParentID, mPrevParentPosition, mPrevChildPosition);
     mpParentItem->removeChild(mpItem);
     mpPrevParentItem->insertChild(mpPrevParentItem->childCount() <= 0 ? 0 : mpPrevParentItem->childCount(), mpItem);
-    mpTreeWidget_keys->setCurrentItem(mpItem);
+    mpTreeWidgetKeys->setCurrentItem(mpItem);
 }
 
 void MoveKeyCommand::redo()
@@ -683,10 +1005,109 @@ void MoveKeyCommand::redo()
 
     setText(QObject::tr("Move Key"));
 }
+
+KeyNameTextEditedCommand::KeyNameTextEditedCommand(dlgKeysMainArea* keysMainArea, QUndoCommand* parent)
+{
+    mpKeysMainArea = keysMainArea;
+}
+
+void KeyNameTextEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetKeys->setCurrentItem(mpItem);
+    mpKeysMainArea->lineEdit_key_name->blockSignals(true);
+    mpKeysMainArea->lineEdit_key_name->setText(mPrevKeyName);
+    mpKeysMainArea->lineEdit_key_name->blockSignals(false);
+}
+
+void KeyNameTextEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetKeys->setCurrentItem(mpItem);
+    mpKeysMainArea->lineEdit_key_name->blockSignals(true);
+    mpKeysMainArea->lineEdit_key_name->setText(mKeyName);
+    mpKeysMainArea->lineEdit_key_name->blockSignals(false);
+    setText(QObject::tr("Edit key name"));
+}
+
+KeyCommandTextEditedCommand::KeyCommandTextEditedCommand(dlgKeysMainArea* keysMainArea, QUndoCommand* parent)
+{
+    mpKeysMainArea = keysMainArea;
+}
+
+void KeyCommandTextEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetKeys->setCurrentItem(mpItem);
+    mpKeysMainArea->lineEdit_key_command->blockSignals(true);
+    mpKeysMainArea->lineEdit_key_command->setText(mPrevKeyCommand);
+    mpKeysMainArea->lineEdit_key_command->blockSignals(false);
+}
+
+void KeyCommandTextEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetKeys->setCurrentItem(mpItem);
+    mpKeysMainArea->lineEdit_key_command->blockSignals(true);
+    mpKeysMainArea->lineEdit_key_command->setText(mKeyCommand);
+    mpKeysMainArea->lineEdit_key_command->blockSignals(false);
+    setText(QObject::tr("Edit key command"));
+}
+
+KeyGrabTextEditedCommand::KeyGrabTextEditedCommand(dlgKeysMainArea* keysMainArea, QUndoCommand* parent)
+{
+    mpKeysMainArea = keysMainArea;
+}
+
+void KeyGrabTextEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetKeys->setCurrentItem(mpItem);
+    const int triggerID = mpItem->data(0, Qt::UserRole).toInt();
+    TKey* pT = mpKeyUnit->getKey(triggerID);
+    if (pT) {
+        pT->setKeyCode(mPrevKey);
+        pT->setKeyModifiers(mPrevModifier);
+    }
+    mpKeysMainArea->lineEdit_key_binding->blockSignals(true);
+    mpKeysMainArea->lineEdit_key_binding->setText(mPrevKeyName);
+    mpKeysMainArea->lineEdit_key_binding->blockSignals(false);
+}
+
+void KeyGrabTextEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetKeys->setCurrentItem(mpItem);
+    const int triggerID = mpItem->data(0, Qt::UserRole).toInt();
+    TKey* pT = mpKeyUnit->getKey(triggerID);
+    if (pT) {
+        mPrevKey = pT->getKeyCode();
+        mPrevModifier = pT->getKeyModifiers();
+        pT->setKeyCode(mKey);
+        pT->setKeyModifiers(mModifier);
+    }
+    mpKeysMainArea->lineEdit_key_binding->blockSignals(true);
+    mpKeysMainArea->lineEdit_key_binding->setText(mKeyName);
+    mpKeysMainArea->lineEdit_key_binding->blockSignals(false);
+    setText(QObject::tr("Edit key modifer"));
+}
+
 AddActionCommand::AddActionCommand(QTreeWidgetItem* pItem, ActionUnit* actionUnit, TTreeWidget* treeWidget_actions, bool isFolder, QUndoCommand* parent)
 {
     mpActionUnit = actionUnit;
-    mpTreeWidget_actions = treeWidget_actions;
+    mpTreeWidgetActions = treeWidget_actions;
     mIsFolder = isFolder;
     mpItem = pItem;
 }
@@ -712,7 +1133,7 @@ void AddActionCommand::redo()
     }
     if (!mpItem) {
         mpEditor->addAction(mpItem);
-        mpItem = mpTreeWidget_actions->currentItem();
+        mpItem = mpTreeWidgetActions->currentItem();
         mpParent = mpItem->parent();
     } else {
         int count = mpParent->childCount();
@@ -730,7 +1151,7 @@ DeleteActionCommand::DeleteActionCommand(QTreeWidgetItem* pItem, ActionUnit* act
     mpItem = pItem;
     mpParent = mpItem->parent();
     mpActionUnit = actionUnit;
-    mpTreeWidget_actions = treeWidget_actions;
+    mpTreeWidgetActions = treeWidget_actions;
 }
 
 void DeleteActionCommand::undo()
@@ -744,7 +1165,7 @@ void DeleteActionCommand::undo()
         const int childID = mpItemAction->getID();
         mpItem->setData(0, Qt::UserRole, childID);
         mpParent->insertChild(mpParent->childCount() <= 0 ? 0 : mpParent->childCount(), mpItem);
-        mpTreeWidget_actions->setCurrentItem(mpItem);
+        mpTreeWidgetActions->setCurrentItem(mpItem);
     } else {
         qDebug() << "parent is null ";
     }
@@ -788,7 +1209,7 @@ MoveActionCommand::MoveActionCommand(ActionUnit* actionUnit,
     mPrevParentPosition = prevParentPosition;
     mPrevChildPosition = prevChildPosition;
     mpActionUnit = actionUnit;
-    mpTreeWidget_actions = treeWidget_actions;
+    mpTreeWidgetActions = treeWidget_actions;
 }
 
 void MoveActionCommand::undo()
@@ -800,7 +1221,7 @@ void MoveActionCommand::undo()
     mpHost->getActionUnit()->reParentAction(mChildID, mNewParentID, mOldParentID, mPrevParentPosition, mPrevChildPosition);
     mpParentItem->removeChild(mpItem);
     mpPrevParentItem->insertChild(mpPrevParentItem->childCount() <= 0 ? 0 : mpPrevParentItem->childCount(), mpItem);
-    mpTreeWidget_actions->setCurrentItem(mpItem);
+    mpTreeWidgetActions->setCurrentItem(mpItem);
     mpHost->getActionUnit()->updateToolbar();
 }
 
@@ -818,10 +1239,229 @@ void MoveActionCommand::redo()
 
     setText(QObject::tr("Move Action"));
 }
+
+ActionNameTextEditedCommand::ActionNameTextEditedCommand(dlgActionMainArea* actionsMainArea, QUndoCommand* parent)
+{
+    mpActionsMainArea = actionsMainArea;
+}
+
+void ActionNameTextEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetActions->setCurrentItem(mpItem);
+    mpActionsMainArea->lineEdit_action_name->blockSignals(true);
+    mpActionsMainArea->lineEdit_action_name->setText(mPrevActionName);
+    mpActionsMainArea->lineEdit_action_name->blockSignals(false);
+}
+
+void ActionNameTextEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetActions->setCurrentItem(mpItem);
+    mpActionsMainArea->lineEdit_action_name->blockSignals(true);
+    mpActionsMainArea->lineEdit_action_name->setText(mActionName);
+    mpActionsMainArea->lineEdit_action_name->blockSignals(false);
+    setText(QObject::tr("Edit action name"));
+}
+
+ActionButtonRotationEditedCommand::ActionButtonRotationEditedCommand(dlgActionMainArea* actionsMainArea, QUndoCommand* parent)
+{
+    mpActionsMainArea = actionsMainArea;
+}
+
+void ActionButtonRotationEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetActions->setCurrentItem(mpItem);
+    mpActionsMainArea->comboBox_action_button_rotation->blockSignals(true);
+    mpActionsMainArea->comboBox_action_button_rotation->setCurrentIndex(mPrevRotation);
+    mpActionsMainArea->comboBox_action_button_rotation->blockSignals(false);
+}
+
+void ActionButtonRotationEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetActions->setCurrentItem(mpItem);
+    mpActionsMainArea->comboBox_action_button_rotation->blockSignals(true);
+    mpActionsMainArea->comboBox_action_button_rotation->setCurrentIndex(mRotation);
+    mpActionsMainArea->comboBox_action_button_rotation->blockSignals(false);
+    setText(QObject::tr("Edit action rotation"));
+}
+
+ActionButtonCheckboxEditedCommand::ActionButtonCheckboxEditedCommand(dlgActionMainArea* actionsMainArea, QUndoCommand* parent)
+{
+    mpActionsMainArea = actionsMainArea;
+}
+
+void ActionButtonCheckboxEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetActions->setCurrentItem(mpItem);
+    mpActionsMainArea->checkBox_action_button_isPushDown->blockSignals(true);
+    mpActionsMainArea->checkBox_action_button_isPushDown->setChecked(mPrevIsPushDown);
+    mpActionsMainArea->checkBox_action_button_isPushDown->blockSignals(false);
+    if (mPrevIsPushDown) {
+        mpActionsMainArea->lineEdit_action_button_command_up->show();
+        mpActionsMainArea->label_action_button_command_up->show();
+        mpActionsMainArea->label_action_button_command_down->setText(mpEditor->tr("Command (down):"));
+    } else {
+        mpActionsMainArea->lineEdit_action_button_command_up->hide();
+        mpActionsMainArea->label_action_button_command_up->hide();
+        mpActionsMainArea->label_action_button_command_down->setText(mpEditor->tr("Command:"));
+    }
+}
+
+void ActionButtonCheckboxEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetActions->setCurrentItem(mpItem);
+    mpActionsMainArea->checkBox_action_button_isPushDown->blockSignals(true);
+    mpActionsMainArea->checkBox_action_button_isPushDown->setChecked(mIsPushDown);
+    mpActionsMainArea->checkBox_action_button_isPushDown->blockSignals(false);
+    if (mIsPushDown) {
+        mpActionsMainArea->lineEdit_action_button_command_up->show();
+        mpActionsMainArea->label_action_button_command_up->show();
+        mpActionsMainArea->label_action_button_command_down->setText(mpEditor->tr("Command (down):"));
+    } else {
+        mpActionsMainArea->lineEdit_action_button_command_up->hide();
+        mpActionsMainArea->label_action_button_command_up->hide();
+        mpActionsMainArea->label_action_button_command_down->setText(mpEditor->tr("Command:"));
+    }
+    setText(QObject::tr("Edit action pushdown"));
+}
+
+ActionCommandDownTextEditedCommand::ActionCommandDownTextEditedCommand(dlgActionMainArea* actionsMainArea, QUndoCommand* parent)
+{
+    mpActionsMainArea = actionsMainArea;
+}
+
+void ActionCommandDownTextEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetActions->setCurrentItem(mpItem);
+    mpActionsMainArea->lineEdit_action_button_command_down->blockSignals(true);
+    mpActionsMainArea->lineEdit_action_button_command_down->setText(mPrevCommandDown);
+    mpActionsMainArea->lineEdit_action_button_command_down->blockSignals(false);
+}
+
+void ActionCommandDownTextEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetActions->setCurrentItem(mpItem);
+    mpActionsMainArea->lineEdit_action_button_command_down->blockSignals(true);
+    mpActionsMainArea->lineEdit_action_button_command_down->setText(mCommandDown);
+    mpActionsMainArea->lineEdit_action_button_command_down->blockSignals(false);
+    setText(QObject::tr("Edit action down"));
+}
+
+ActionCommandUpTextEditedCommand::ActionCommandUpTextEditedCommand(dlgActionMainArea* actionsMainArea, QUndoCommand* parent)
+{
+    mpActionsMainArea = actionsMainArea;
+}
+
+void ActionCommandUpTextEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetActions->setCurrentItem(mpItem);
+    mpActionsMainArea->lineEdit_action_button_command_up->blockSignals(true);
+    mpActionsMainArea->lineEdit_action_button_command_up->setText(mPrevCommandUp);
+    mpActionsMainArea->lineEdit_action_button_command_up->blockSignals(false);
+}
+
+void ActionCommandUpTextEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetActions->setCurrentItem(mpItem);
+    mpActionsMainArea->lineEdit_action_button_command_up->blockSignals(true);
+    mpActionsMainArea->lineEdit_action_button_command_up->setText(mCommandUp);
+    mpActionsMainArea->lineEdit_action_button_command_up->blockSignals(false);
+    setText(QObject::tr("Edit action up"));
+}
+
+ActionCssTextEditedCommand::ActionCssTextEditedCommand(dlgActionMainArea* actionsMainArea, QUndoCommand* parent)
+{
+    mpActionsMainArea = actionsMainArea;
+}
+
+int ActionCssTextEditedCommand::id() const
+{
+    return 5;
+}
+
+bool ActionCssTextEditedCommand::mergeWith(const QUndoCommand *other)
+{
+    if (other->id() != id()) // make sure other is also an ActionCssTextEditedCommand command
+        return false;
+    QString text = static_cast<const ActionCssTextEditedCommand*>(other)->mActionCss;
+    QTextCursor cursor = mpActionsMainArea->plainTextEdit_action_css->textCursor();
+    if(cursor.movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor))
+    {
+        QString selectedChar = cursor.selectedText();
+        bool flag = text == mActionCss;
+        if(selectedChar == QChar::ParagraphSeparator || selectedChar == QChar::Space || selectedChar == QChar::CarriageReturn || selectedChar == QChar::LineFeed)
+        {
+            return false;
+        }
+    }
+    mActionCss = text;
+    return true;
+}
+
+void ActionCssTextEditedCommand::undo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetActions->setCurrentItem(mpItem);
+    mpActionsMainArea->plainTextEdit_action_css->blockSignals(true);
+    QTextCursor cssCursor(mpActionsMainArea->plainTextEdit_action_css->textCursor());
+    int curPosition = cssCursor.position();
+    mpActionsMainArea->plainTextEdit_action_css->setPlainText(mPrevActionCss);
+    cssCursor.setPosition(curPosition);
+    mpActionsMainArea->plainTextEdit_action_css->setTextCursor(cssCursor);
+    mpActionsMainArea->plainTextEdit_action_css->blockSignals(false);
+}
+
+void ActionCssTextEditedCommand::redo()
+{
+    if (!mpItem) {
+        return;
+    }
+    mpTreeWidgetActions->setCurrentItem(mpItem);
+    mpActionsMainArea->plainTextEdit_action_css->blockSignals(true);
+    QTextCursor cssCursor(mpActionsMainArea->plainTextEdit_action_css->textCursor());
+    int curPosition = cssCursor.position();
+    mpActionsMainArea->plainTextEdit_action_css->setPlainText(mActionCss);
+    cssCursor.setPosition(curPosition);
+    mpActionsMainArea->plainTextEdit_action_css->setTextCursor(cssCursor);
+    mpActionsMainArea->plainTextEdit_action_css->blockSignals(false);
+    setText(QObject::tr("Edit action css"));
+}
+
 AddVarCommand::AddVarCommand(QTreeWidgetItem* pItem, VarUnit* varUnit, TTreeWidget* treeWidget_variables, bool isFolder, QUndoCommand* parent)
 {
     mpVarUnit = varUnit;
-    mpTreeWidget_variables = treeWidget_variables;
+    mpTreeWidgetVariables = treeWidget_variables;
     mIsFolder = isFolder;
     mpItem = pItem;
 }
@@ -848,7 +1488,7 @@ void AddVarCommand::redo()
     }
     if (!mpItem) {
         mpEditor->addVar(mIsFolder);
-        mpItem = mpTreeWidget_variables->currentItem();
+        mpItem = mpTreeWidgetVariables->currentItem();
         mpParent = mpItem->parent();
     } else {
         if (!mpParent) {
@@ -871,7 +1511,7 @@ DeleteVarCommand::DeleteVarCommand(QTreeWidgetItem* pItem, VarUnit* varUnit, TTr
     mpItem = pItem;
     mpParent = mpItem->parent();
     mpVarUnit = varUnit;
-    mpTreeWidget_variables = treeWidget_variables;
+    mpTreeWidgetVariables = treeWidget_variables;
 }
 
 void DeleteVarCommand::undo()
@@ -900,7 +1540,7 @@ void DeleteVarCommand::undo()
                 v->setParent(mpTempVar);
             }
         }
-        mpTreeWidget_variables->setCurrentItem(mpItem);
+        mpTreeWidgetVariables->setCurrentItem(mpItem);
     } else {
         qDebug() << "parent is null ";
     }
@@ -915,7 +1555,7 @@ void DeleteVarCommand::redo()
         return;
     }
     if (mpItem) {
-        mpTreeWidget_variables->setCurrentItem(mpItem);
+        mpTreeWidgetVariables->setCurrentItem(mpItem);
         if (!mpItemVar) {
             mpItemVar = new TVar();
             TVar* p = mpVarUnit->getWVar(mpItem);
@@ -931,7 +1571,7 @@ MoveVariableCommand::MoveVariableCommand(
 : QUndoCommand(parent)
 {
     mpVarUnit = varUnit;
-    mpTreeWidget_variables = treeWidget_variables;
+    mpTreeWidgetVariables = treeWidget_variables;
     mpParentItem = parentItem;
     mpItem = cItem;
     mpPrevParentItem = prevParentItem;
@@ -950,7 +1590,7 @@ void MoveVariableCommand::undo()
     }
     mpParentItem->removeChild(mpItem);
     mpPrevParentItem->insertChild(mpPrevParentItem->childCount() <= 0 ? 0 : mpPrevParentItem->childCount(), mpItem);
-    mpTreeWidget_variables->setCurrentItem(mpItem);
+    mpTreeWidgetVariables->setCurrentItem(mpItem);
 }
 
 void MoveVariableCommand::redo()
@@ -981,9 +1621,9 @@ void TriggerNameTextEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     // mpEditor->slot_triggerSelected(mpItem);
-    mpTriggersMainArea->lineEdit_trigger_name->setText(mPrevLineEdit_trigger_name);
+    mpTriggersMainArea->lineEdit_trigger_name->setText(mPrevLineEditTriggerName);
 }
 
 void TriggerNameTextEditedCommand::redo()
@@ -991,9 +1631,9 @@ void TriggerNameTextEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     // mpEditor->slot_triggerSelected(mpItem);
-    mpTriggersMainArea->lineEdit_trigger_name->setText(mLineEdit_trigger_name);
+    mpTriggersMainArea->lineEdit_trigger_name->setText(mLineEditTriggerName);
     setText(QObject::tr("Edit trigger name"));
 }
 
@@ -1007,9 +1647,9 @@ void TriggerCommandTextEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
-    mpTriggersMainArea->lineEdit_trigger_command->setText(mPrevLineEdit_trigger_command);
+    mpTriggersMainArea->lineEdit_trigger_command->setText(mPrevLineEditTriggerCommand);
 }
 
 void TriggerCommandTextEditedCommand::redo()
@@ -1017,9 +1657,9 @@ void TriggerCommandTextEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
-    mpTriggersMainArea->lineEdit_trigger_command->setText(mLineEdit_trigger_command);
+    mpTriggersMainArea->lineEdit_trigger_command->setText(mLineEditTriggerCommand);
     setText(QObject::tr("Edit trigger command"));
 }
 
@@ -1033,7 +1673,7 @@ void TriggerFireLengthEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->spinBox_stayOpen->blockSignals(true);
     mpTriggersMainArea->spinBox_stayOpen->setValue(mPrevFireLength);
@@ -1045,7 +1685,7 @@ void TriggerFireLengthEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->spinBox_stayOpen->blockSignals(true);
     mpTriggersMainArea->spinBox_stayOpen->setValue(mFireLength);
@@ -1063,10 +1703,10 @@ void TriggerPlaySoundEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->groupBox_soundTrigger->blockSignals(true);
-    mpTriggersMainArea->groupBox_soundTrigger->setChecked(mPrevGroupBox_soundTrigger);
+    mpTriggersMainArea->groupBox_soundTrigger->setChecked(mPrevGroupBoxSoundTrigger);
     mpTriggersMainArea->groupBox_soundTrigger->blockSignals(false);
 }
 
@@ -1075,10 +1715,10 @@ void TriggerPlaySoundEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->groupBox_soundTrigger->blockSignals(true);
-    mpTriggersMainArea->groupBox_soundTrigger->setChecked(mGroupBox_soundTrigger);
+    mpTriggersMainArea->groupBox_soundTrigger->setChecked(mGroupBoxSoundTrigger);
     mpTriggersMainArea->groupBox_soundTrigger->blockSignals(false);
     setText(QObject::tr("Edit play sound"));
 }
@@ -1093,10 +1733,10 @@ void TriggerPlaySoundFileEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->lineEdit_soundFile->blockSignals(true);
-    mpTriggersMainArea->lineEdit_soundFile->setText(mPrevLineEdit_soundFile);
+    mpTriggersMainArea->lineEdit_soundFile->setText(mPrevLineEditSoundFile);
     mpTriggersMainArea->lineEdit_soundFile->blockSignals(false);
 }
 
@@ -1105,10 +1745,10 @@ void TriggerPlaySoundFileEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->lineEdit_soundFile->blockSignals(true);
-    mpTriggersMainArea->lineEdit_soundFile->setText(mLineEdit_soundFile);
+    mpTriggersMainArea->lineEdit_soundFile->setText(mLineEditSoundFile);
     mpTriggersMainArea->lineEdit_soundFile->blockSignals(false);
     setText(QObject::tr("Edit play sound file"));
 }
@@ -1123,17 +1763,17 @@ void TriggerColorizerEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->groupBox_triggerColorizer->blockSignals(true);
-    mpTriggersMainArea->groupBox_triggerColorizer->setChecked(mPrevBox_triggerColorizer);
+    mpTriggersMainArea->groupBox_triggerColorizer->setChecked(mPrevBoxTriggerColorizer);
     mpTriggersMainArea->groupBox_triggerColorizer->blockSignals(false);
 }
 
 void TriggerColorizerEditedCommand::redo()
 {
     mpTriggersMainArea->groupBox_triggerColorizer->blockSignals(true);
-    mpTriggersMainArea->groupBox_triggerColorizer->setChecked(mBox_triggerColorizer);
+    mpTriggersMainArea->groupBox_triggerColorizer->setChecked(mBoxTriggerColorizer);
     mpTriggersMainArea->groupBox_triggerColorizer->blockSignals(false);
     setText(QObject::tr("Edit trigger colorizer"));
 }
@@ -1148,7 +1788,7 @@ void TriggerColorizerBgColorEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->pushButtonBgColor->blockSignals(true);
     mpTriggersMainArea->pushButtonBgColor->setProperty("baseColor", mPrevbgColor);
@@ -1163,7 +1803,7 @@ void TriggerColorizerBgColorEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->pushButtonBgColor->blockSignals(true);
     mpTriggersMainArea->pushButtonBgColor->setProperty("baseColor", mBgColor);
@@ -1184,7 +1824,7 @@ void TriggerColorizerFgColorEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->pushButtonFgColor->blockSignals(true);
     mpTriggersMainArea->pushButtonFgColor->setProperty("baseColor", mPrevfgColor);
@@ -1199,7 +1839,7 @@ void TriggerColorizerFgColorEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->pushButtonFgColor->blockSignals(true);
     mpTriggersMainArea->pushButtonFgColor->setProperty("baseColor", mFgColor);
@@ -1220,7 +1860,7 @@ void TriggerPerlSlashGOptionEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->groupBox_perlSlashGOption->blockSignals(true);
     mpTriggersMainArea->groupBox_perlSlashGOption->setChecked(mPrevPerlSlashGOption);
@@ -1232,7 +1872,7 @@ void TriggerPerlSlashGOptionEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->groupBox_perlSlashGOption->blockSignals(true);
     mpTriggersMainArea->groupBox_perlSlashGOption->setChecked(mPerlSlashGOption);
@@ -1250,7 +1890,7 @@ void TriggerGroupFilterEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->groupBox_filterTrigger->blockSignals(true);
     mpTriggersMainArea->groupBox_filterTrigger->setChecked(mPrevFilterTrigger);
@@ -1262,7 +1902,7 @@ void TriggerGroupFilterEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->groupBox_filterTrigger->blockSignals(true);
     mpTriggersMainArea->groupBox_filterTrigger->setChecked(mFilterTrigger);
@@ -1280,7 +1920,7 @@ void TriggerMultiLineEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->groupBox_multiLineTrigger->blockSignals(true);
     mpTriggersMainArea->groupBox_multiLineTrigger->setChecked(mPrevMultiLineTrigger);
@@ -1292,7 +1932,7 @@ void TriggerMultiLineEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->groupBox_multiLineTrigger->blockSignals(true);
     mpTriggersMainArea->groupBox_multiLineTrigger->setChecked(mMultiLineTrigger);
@@ -1310,7 +1950,7 @@ void TriggerLineMarginEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->spinBox_lineMargin->blockSignals(true);
     mpTriggersMainArea->spinBox_lineMargin->setValue(mPrevLineMargin);
@@ -1322,7 +1962,7 @@ void TriggerLineMarginEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpTriggersMainArea->spinBox_lineMargin->blockSignals(true);
     mpTriggersMainArea->spinBox_lineMargin->setValue(mLineMargin);
@@ -1340,7 +1980,7 @@ void TriggerLineEditPatternItemEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     // mpEditor->slot_triggerSelected(mpItem);
     pBox->blockSignals(true);
     pBox->setCurrentIndex(mPrevTriggerPatternEdit);
@@ -1354,7 +1994,7 @@ void TriggerLineEditPatternItemEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     // mpEditor->slot_triggerSelected(mpItem);
     const int ID = mpItem->data(0, Qt::UserRole).toInt();
     TTrigger* pT = mpTriggerUnit->getTrigger(ID);
@@ -1376,13 +2016,13 @@ void TriggerLineEditPatternEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpTriggerPattern->lineEdit_pattern->blockSignals(true);
     // mpEditor->slot_triggerSelected(mpItem);
-    mpTriggerPattern->lineEdit_pattern->setText(mPrevLineEdit_trigger_pattern);
+    mpTriggerPattern->lineEdit_pattern->setText(mPrevLineEditTriggerPattern);
     mpTriggerPattern->lineEdit_pattern->blockSignals(false);
 
-    if (!mPrevLineEdit_trigger_pattern.isEmpty()) {
+    if (!mPrevLineEditTriggerPattern.isEmpty()) {
         dlgTriggerPatternEdit* pPatternItem = mpTriggerPatternEdit[mRow];
         pPatternItem->lineEdit_pattern->setEnabled(true);
     }
@@ -1397,12 +2037,12 @@ void TriggerLineEditPatternEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpTriggerPattern->lineEdit_pattern->blockSignals(true);
     // mpEditor->slot_triggerSelected(mpItem);
-    mpTriggerPattern->lineEdit_pattern->setText(mLineEdit_trigger_pattern);
+    mpTriggerPattern->lineEdit_pattern->setText(mLineEditTriggerPattern);
 
-    if (!mLineEdit_trigger_pattern.isEmpty()) {
+    if (!mLineEditTriggerPattern.isEmpty()) {
         dlgTriggerPatternEdit* pPatternItem = mpTriggerPatternEdit[mRow];
         pPatternItem->lineEdit_pattern->setEnabled(true);
     }
@@ -1423,7 +2063,7 @@ void TriggerLineSpacerEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpPatternItem->spinBox_lineSpacer->blockSignals(true);
     mpPatternItem->spinBox_lineSpacer->setValue(mPrevLineSpacer);
@@ -1435,7 +2075,7 @@ void TriggerLineSpacerEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     mpPatternItem->spinBox_lineSpacer->blockSignals(true);
     mpPatternItem->spinBox_lineSpacer->setValue(mLineSpacer);
@@ -1453,7 +2093,7 @@ void TriggerColorFGEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     // mpEditor->slot_triggerSelected(mpItem);
     const int triggerID = mpItem->data(0, Qt::UserRole).toInt();
     TTrigger* pT = mpTriggerUnit->getTrigger(triggerID);
@@ -1492,7 +2132,7 @@ void TriggerColorFGEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     // mpEditor->slot_triggerSelected(mpItem);
     const int triggerID = mpItem->data(0, Qt::UserRole).toInt();
     TTrigger* pT = mpTriggerUnit->getTrigger(triggerID);
@@ -1539,7 +2179,7 @@ void TriggerColorBGEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     const int triggerID = mpItem->data(0, Qt::UserRole).toInt();
     TTrigger* pT = mpTriggerUnit->getTrigger(triggerID);
@@ -1572,7 +2212,7 @@ void TriggerColorBGEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpTreeWidget_triggers->setCurrentItem(mpItem);
+    mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     const int triggerID = mpItem->data(0, Qt::UserRole).toInt();
     TTrigger* pT = mpTriggerUnit->getTrigger(triggerID);

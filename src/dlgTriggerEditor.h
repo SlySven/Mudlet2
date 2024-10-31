@@ -93,7 +93,6 @@ class TAction;
 class TKey;
 class TConsole;
 class dlgVarsMainArea;
-class TriggerNameTextEditedCommand;
 
 class dlgTriggerEditor : public QMainWindow, private Ui::trigger_editor
 {
@@ -349,6 +348,23 @@ private slots:
     void slot_triggerLinePatternItemEdited(int);
     void slot_triggerLinePatternEdited(int);
     void slot_triggerLineSpacerEdited(int);
+    void slot_AliasNameTextEdited();
+    void slot_AliasCommandTextEdited();
+    void slot_AliasPatternTextEdited();
+    void slot_ScriptNameTextEdited();
+    void slot_TimerNameTextEdited();
+    void slot_TimerCommandTextEdited();
+    void slot_TimerHoursTextEdited(QTime time);
+    void slot_TimerMinutesTextEdited(QTime time);
+    void slot_TimerSecondsTextEdited(QTime time);
+    void slot_TimerMilliSecondsTextEdited(QTime time);
+    void slot_KeyNameTextEdited();
+    void slot_KeyCommandTextEdited();
+    void slot_ActionNameTextEdited();
+    void slot_ActionButtonRotationEdited();
+    void slot_ActionCommandDownTextEdited();
+    void slot_ActionCommandUpTextEdited();
+    void slot_ActionCssTextEdited();
 
 public:
     TConsole* mpErrorConsole = nullptr;
@@ -650,6 +666,26 @@ private:
     QList<int> mPrevLineSpacer;
     QColor mPrevColorTriggerFgColor;
     QColor mPrevColorTriggerBgColor;
+    QString mPrevAliasName;
+    QString mPrevAliasCommand;
+    QString mPrevAliasPattern;
+    QString mPrevScriptName;
+    QString mPrevTimerName;
+    QString mPrevTimerCommand;
+    int mPrevTimerHours;
+    int mPrevTimerMinutes;
+    int mPrevTimerSeconds;
+    int mPrevTimerMilliSeconds;
+    QString mPrevKeyName;
+    QString mPrevKeyCommand;
+    QString mPrevKeyModifier;
+    QString mPrevActionName;
+    int mPrevActionRotation;
+    bool mPrevActionButtonChecked;
+    QString mPrevActionDown;
+    QString mPrevActionUp;
+    QString mPrevActionCss;
+
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(dlgTriggerEditor::SearchOptions)
