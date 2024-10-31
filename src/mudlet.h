@@ -57,6 +57,7 @@
 #include <QTextOption>
 #include <QTime>
 #include <QVersionNumber>
+#include <QWindow>
 #include "edbee/models/textautocompleteprovider.h"
 #if defined(INCLUDE_OWN_QT5_KEYCHAIN)
 #include <../3rdparty/qtkeychain/keychain.h>
@@ -540,7 +541,7 @@ public slots:
     void slot_restoreMainToolBar() { setToolBarVisibility(visibleAlways); }
     void slot_showAboutDialog();
     void slot_showHelpDialogForum();
-// Not used:    void slot_showHelpDialogIrc();
+    void slot_showHelpDialogIrc();
     void slot_showHelpDialogVideo();
     void slot_tabChanged(int);
     void slot_timerFires();
@@ -550,6 +551,7 @@ public slots:
 
 protected:
     void closeEvent(QCloseEvent*) override;
+    void changeEvent(QEvent*) override;
 
 
 signals:
@@ -573,6 +575,7 @@ signals:
     void signal_showMapAuditErrorsChanged(bool);
     void signal_tabChanged(const QString&);
     void signal_toolBarVisibilityChanged(const mudlet::controlsVisibility);
+    void signal_windowStateChanged(const Qt::WindowStates);
 
 
 private slots:
@@ -600,6 +603,7 @@ private slots:
     void slot_updateInstalled();
 #endif
     void slot_updateShortcuts();
+    void slot_windowStateChanged(const Qt::WindowStates);
 
 
 private:
