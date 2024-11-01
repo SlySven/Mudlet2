@@ -1,12 +1,12 @@
 #include "dlgTriggerEditorCommand.h"
 #include "Host.h"
 #include "LuaInterface.h"
+#include "dlgActionMainArea.h"
+#include "dlgAliasMainArea.h"
+#include "dlgKeysMainArea.h"
+#include "dlgScriptsMainArea.h"
 #include "dlgTriggerEditor.h"
 #include "dlgTriggerPatternEdit.h"
-#include "dlgAliasMainArea.h"
-#include "dlgScriptsMainArea.h"
-#include "dlgKeysMainArea.h"
-#include "dlgActionMainArea.h"
 #include "mudlet.h"
 #include <QPointer>
 
@@ -835,7 +835,7 @@ void ScriptAddHandlerCommand::redo()
     pItem->setText(mScriptEventhandler);
     mpScriptsMainArea->listWidget_script_registered_event_handlers->addItem(pItem);
     mpWidgetItem = pItem;
-    mRow = mpScriptsMainArea->listWidget_script_registered_event_handlers->indexFromItem(pItem).row();
+    mRow = mpScriptsMainArea->listWidget_script_registered_event_handlers->row(pItem);
     mpScriptsMainArea->listWidget_script_registered_event_handlers->setCurrentRow(mRow);
     setText(QObject::tr("Add script handler"));
 }
@@ -852,7 +852,7 @@ void ScriptRemoveHandlerCommand::undo()
     }
     mpTreeWidgetScripts->setCurrentItem(mpItem);
     mpScriptsMainArea->listWidget_script_registered_event_handlers->addItem(mpWidgetItem);
-    mRow = mpScriptsMainArea->listWidget_script_registered_event_handlers->indexFromItem(mpWidgetItem).row();
+    mRow = mpScriptsMainArea->listWidget_script_registered_event_handlers->row(mpWidgetItem);
     mpScriptsMainArea->listWidget_script_registered_event_handlers->setCurrentRow(mRow);
 }
 
@@ -863,8 +863,7 @@ void ScriptRemoveHandlerCommand::redo()
     }
     mpTreeWidgetScripts->setCurrentItem(mpItem);
     mRow = mpScriptsMainArea->listWidget_script_registered_event_handlers->currentRow();
-    if(mRow < 0)
-    {
+    if (mRow < 0) {
         return;
     }
     mpWidgetItem = mpScriptsMainArea->listWidget_script_registered_event_handlers->takeItem(mRow);
@@ -1409,21 +1408,18 @@ int ActionCssTextEditedCommand::id() const
     return id;
 }
 
-bool ActionCssTextEditedCommand::mergeWith(const QUndoCommand *other)
+bool ActionCssTextEditedCommand::mergeWith(const QUndoCommand* other)
 {
     QString text = static_cast<const ActionCssTextEditedCommand*>(other)->mActionCss;
-    if(text.length() < mActionCss.length())
-    {
+    if (text.length() < mActionCss.length()) {
         mActionCss = text;
         return false;
     }
     QTextCursor cursor = mpActionsMainArea->plainTextEdit_action_css->textCursor();
-    if(cursor.movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor))
-    {
+    if (cursor.movePosition(QTextCursor::PreviousCharacter, QTextCursor::KeepAnchor)) {
         QString selectedChar = cursor.selectedText();
         bool flag = text == mActionCss;
-        if(selectedChar == QChar::ParagraphSeparator || selectedChar == QChar::Space || selectedChar == QChar::CarriageReturn || selectedChar == QChar::LineFeed)
-        {
+        if (selectedChar == QChar::ParagraphSeparator || selectedChar == QChar::Space || selectedChar == QChar::CarriageReturn || selectedChar == QChar::LineFeed) {
             return false;
         }
     }
@@ -1615,7 +1611,7 @@ void MoveVariableCommand::redo()
     setText(QObject::tr("Move Variable"));
 }
 
-TriggerNameTextEditedCommand::TriggerNameTextEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent): QUndoCommand(parent)
+TriggerNameTextEditedCommand::TriggerNameTextEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -1641,7 +1637,7 @@ void TriggerNameTextEditedCommand::redo()
     setText(QObject::tr("Edit trigger name"));
 }
 
-TriggerCommandTextEditedCommand::TriggerCommandTextEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent): QUndoCommand(parent)
+TriggerCommandTextEditedCommand::TriggerCommandTextEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -1667,7 +1663,7 @@ void TriggerCommandTextEditedCommand::redo()
     setText(QObject::tr("Edit trigger command"));
 }
 
-TriggerFireLengthEditedCommand::TriggerFireLengthEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent): QUndoCommand(parent)
+TriggerFireLengthEditedCommand::TriggerFireLengthEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -1697,7 +1693,7 @@ void TriggerFireLengthEditedCommand::redo()
     setText(QObject::tr("Edit fire length"));
 }
 
-TriggerPlaySoundEditedCommand::TriggerPlaySoundEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent): QUndoCommand(parent)
+TriggerPlaySoundEditedCommand::TriggerPlaySoundEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -1727,7 +1723,7 @@ void TriggerPlaySoundEditedCommand::redo()
     setText(QObject::tr("Edit play sound"));
 }
 
-TriggerPlaySoundFileEditedCommand::TriggerPlaySoundFileEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent): QUndoCommand(parent)
+TriggerPlaySoundFileEditedCommand::TriggerPlaySoundFileEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -1757,7 +1753,7 @@ void TriggerPlaySoundFileEditedCommand::redo()
     setText(QObject::tr("Edit play sound file"));
 }
 
-TriggerColorizerEditedCommand::TriggerColorizerEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent): QUndoCommand(parent)
+TriggerColorizerEditedCommand::TriggerColorizerEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -1782,7 +1778,7 @@ void TriggerColorizerEditedCommand::redo()
     setText(QObject::tr("Edit trigger colorizer"));
 }
 
-TriggerColorizerBgColorEditedCommand::TriggerColorizerBgColorEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent): QUndoCommand(parent)
+TriggerColorizerBgColorEditedCommand::TriggerColorizerBgColorEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -1818,7 +1814,7 @@ void TriggerColorizerBgColorEditedCommand::redo()
     setText(QObject::tr("Edit trigger bg color"));
 }
 
-TriggerColorizerFgColorEditedCommand::TriggerColorizerFgColorEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent): QUndoCommand(parent)
+TriggerColorizerFgColorEditedCommand::TriggerColorizerFgColorEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -1854,7 +1850,7 @@ void TriggerColorizerFgColorEditedCommand::redo()
     setText(QObject::tr("Edit trigger fg color"));
 }
 
-TriggerPerlSlashGOptionEditedCommand::TriggerPerlSlashGOptionEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent): QUndoCommand(parent)
+TriggerPerlSlashGOptionEditedCommand::TriggerPerlSlashGOptionEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -1884,7 +1880,7 @@ void TriggerPerlSlashGOptionEditedCommand::redo()
     setText(QObject::tr("Edit Perl Option"));
 }
 
-TriggerGroupFilterEditedCommand::TriggerGroupFilterEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent): QUndoCommand(parent)
+TriggerGroupFilterEditedCommand::TriggerGroupFilterEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -1914,7 +1910,7 @@ void TriggerGroupFilterEditedCommand::redo()
     setText(QObject::tr("Edit filter trigger"));
 }
 
-TriggerMultiLineEditedCommand::TriggerMultiLineEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent): QUndoCommand(parent)
+TriggerMultiLineEditedCommand::TriggerMultiLineEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -1944,7 +1940,7 @@ void TriggerMultiLineEditedCommand::redo()
     setText(QObject::tr("Edit multiline trigger"));
 }
 
-TriggerLineMarginEditedCommand::TriggerLineMarginEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent): QUndoCommand(parent)
+TriggerLineMarginEditedCommand::TriggerLineMarginEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -1974,7 +1970,7 @@ void TriggerLineMarginEditedCommand::redo()
     setText(QObject::tr("Edit line margin"));
 }
 
-TriggerLineEditPatternItemEditedCommand::TriggerLineEditPatternItemEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent): QUndoCommand(parent)
+TriggerLineEditPatternItemEditedCommand::TriggerLineEditPatternItemEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -2010,7 +2006,7 @@ void TriggerLineEditPatternItemEditedCommand::redo()
     setText(QObject::tr("Edit line pattern"));
 }
 
-TriggerLineEditPatternEditedCommand::TriggerLineEditPatternEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent): QUndoCommand(parent)
+TriggerLineEditPatternEditedCommand::TriggerLineEditPatternEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -2057,7 +2053,7 @@ void TriggerLineEditPatternEditedCommand::redo()
     setText(QObject::tr("Edit trigger pattern"));
 }
 
-TriggerLineSpacerEditedCommand::TriggerLineSpacerEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent): QUndoCommand(parent)
+TriggerLineSpacerEditedCommand::TriggerLineSpacerEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -2087,7 +2083,7 @@ void TriggerLineSpacerEditedCommand::redo()
     setText(QObject::tr("Edit line spacer"));
 }
 
-TriggerColorFGEditedCommand::TriggerColorFGEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent): QUndoCommand(parent)
+TriggerColorFGEditedCommand::TriggerColorFGEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -2173,7 +2169,7 @@ void TriggerColorFGEditedCommand::redo()
     setText(QObject::tr("Edit FG Color"));
 }
 
-TriggerColorBGEditedCommand::TriggerColorBGEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent): QUndoCommand(parent)
+TriggerColorBGEditedCommand::TriggerColorBGEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpTriggersMainArea = triggersMainArea;
 }

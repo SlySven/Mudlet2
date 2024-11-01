@@ -206,14 +206,14 @@ dlgTriggerEditor::dlgTriggerEditor(Host* pH)
     connect(mpTriggersMainArea->toolButton_clearSoundFile, &QAbstractButton::clicked, this, &dlgTriggerEditor::slot_clearSoundFile);
     connect(mpTriggersMainArea->lineEdit_trigger_name, &QLineEdit::editingFinished, this, &dlgTriggerEditor::slot_lineEditTriggerNameTextEdited);
     connect(mpTriggersMainArea->lineEdit_trigger_command, &QLineEdit::editingFinished, this, &dlgTriggerEditor::slot_lineEditTriggerCommandTextEdited);
-    connect(mpTriggersMainArea->spinBox_stayOpen, &QSpinBox::valueChanged, this, &dlgTriggerEditor::slot_triggerFireLengthEdited);
+    connect(mpTriggersMainArea->spinBox_stayOpen, qOverload<int>(&QSpinBox::valueChanged), this, &dlgTriggerEditor::slot_triggerFireLengthEdited);
     connect(mpTriggersMainArea->groupBox_soundTrigger, &QGroupBox::toggled, this, &dlgTriggerEditor::slot_triggerPlaySoundEdited);
     connect(mpTriggersMainArea->lineEdit_soundFile, &QLineEdit::textChanged, this, &dlgTriggerEditor::slot_triggerPlaySoundFileEdited);
     connect(mpTriggersMainArea->groupBox_triggerColorizer, &QGroupBox::toggled, this, &dlgTriggerEditor::slot_triggerColorizerEdited);
     connect(mpTriggersMainArea->groupBox_perlSlashGOption, &QGroupBox::toggled, this, &dlgTriggerEditor::slot_triggerPerlSlashGOptionEdited);
     connect(mpTriggersMainArea->groupBox_filterTrigger, &QGroupBox::toggled, this, &dlgTriggerEditor::slot_triggerGroupFilterEdited);
     connect(mpTriggersMainArea->groupBox_multiLineTrigger, &QGroupBox::toggled, this, &dlgTriggerEditor::slot_triggerMultiLineEdited);
-    connect(mpTriggersMainArea->spinBox_lineMargin, &QSpinBox::valueChanged, this, &dlgTriggerEditor::slot_triggerLineMarginEdited);
+    connect(mpTriggersMainArea->spinBox_lineMargin, qOverload<int>(&QSpinBox::valueChanged), this, &dlgTriggerEditor::slot_triggerLineMarginEdited);
 
     mpTimersMainArea = new dlgTimersMainArea(this);
     layoutColumn->addWidget(mpTimersMainArea, 1);
@@ -893,12 +893,12 @@ dlgTriggerEditor::dlgTriggerEditor(Host* pH)
         mpPrevTriggerPatternEdit.insert(i, pItem->lineEdit_pattern->text());
         mPrevLineSpacer.insert(i, pItem->spinBox_lineSpacer->value());
         connect(pBox, qOverload<int>(&QComboBox::currentIndexChanged), this, &dlgTriggerEditor::slot_setupPatternControls);
-        connect(pItem->pushButton_fgColor, &QAbstractButton::clicked, this, [=]()->void{dlgTriggerEditor::slot_colorTriggerFg(i);});
-        connect(pItem->pushButton_bgColor, &QAbstractButton::clicked, this, [=]()->void{dlgTriggerEditor::slot_colorTriggerBg(i);});
+        connect(pItem->pushButton_fgColor, &QAbstractButton::clicked, this, [=]() -> void { dlgTriggerEditor::slot_colorTriggerFg(i); });
+        connect(pItem->pushButton_bgColor, &QAbstractButton::clicked, this, [=]() -> void { dlgTriggerEditor::slot_colorTriggerBg(i); });
         connect(pItem->lineEdit_pattern, &QLineEdit::textChanged, this, &dlgTriggerEditor::slot_changedPattern);
-        connect(pBox, &QComboBox::activated, this, &dlgTriggerEditor::slot_triggerLinePatternItemEdited);
-        connect(pItem->lineEdit_pattern, &QLineEdit::editingFinished, this, [=]()->void{dlgTriggerEditor::slot_triggerLinePatternEdited(i);});
-        connect(pItem->spinBox_lineSpacer, &QSpinBox::valueChanged, this, [=]()->void{dlgTriggerEditor::slot_triggerLineSpacerEdited(i);});
+        connect(pBox, qOverload<int>(&QComboBox::activated), this, &dlgTriggerEditor::slot_triggerLinePatternItemEdited);
+        connect(pItem->lineEdit_pattern, &QLineEdit::editingFinished, this, [=]() -> void { dlgTriggerEditor::slot_triggerLinePatternEdited(i); });
+        connect(pItem->spinBox_lineSpacer, qOverload<int>(&QSpinBox::valueChanged), this, [=]() -> void { dlgTriggerEditor::slot_triggerLineSpacerEdited(i); });
         HpatternList->layout()->addWidget(pItem);
         mTriggerPatternEdit.push_back(pItem);
         pItem->mRow = i;
@@ -916,8 +916,7 @@ dlgTriggerEditor::dlgTriggerEditor(Host* pH)
         if (i == 0) {
             pItem->lineEdit_pattern->setPlaceholderText(tr("Text to find (trigger pattern)"));
         }
-        if(i > 0)
-        {
+        if (i > 0) {
             pItem->lineEdit_pattern->setEnabled(false);
         }
     }
@@ -5971,8 +5970,7 @@ void dlgTriggerEditor::slot_triggerLinePatternItemEdited(int i)
 void dlgTriggerEditor::slot_triggerLinePatternEdited(int i)
 {
     QLineEdit* lineEdit = qobject_cast<QLineEdit*>(sender());
-    if(lineEdit->text() == mpPrevTriggerPatternEdit[i])
-    {
+    if (lineEdit->text() == mpPrevTriggerPatternEdit[i]) {
         return;
     }
     dlgTriggerPatternEdit* pTriggerPattern = mTriggerPatternEdit.at(i);
@@ -6118,18 +6116,15 @@ void dlgTriggerEditor::slot_triggerSelected(QTreeWidgetItem* pItem)
 
         // reset the rest of the patterns that don't have any data
         for (int i = 0; i < 50; i++) {
-            if(i == patternList.size())
-            {
+            if (i == patternList.size()) {
                 mTriggerPatternEdit[i]->lineEdit_pattern->setEnabled(true);
                 continue;
             }
 
-            if(mTriggerPatternEdit[i]->lineEdit_pattern->text().isEmpty() && mTriggerPatternEdit[i]->lineEdit_pattern->isEnabled())
-            {
+            if (mTriggerPatternEdit[i]->lineEdit_pattern->text().isEmpty() && mTriggerPatternEdit[i]->lineEdit_pattern->isEnabled()) {
                 mTriggerPatternEdit[i]->lineEdit_pattern->setEnabled(false);
             }
-            if(!mTriggerPatternEdit[i]->lineEdit_pattern->text().isEmpty() && !mTriggerPatternEdit[i]->lineEdit_pattern->isEnabled())
-            {
+            if (!mTriggerPatternEdit[i]->lineEdit_pattern->text().isEmpty() && !mTriggerPatternEdit[i]->lineEdit_pattern->isEnabled()) {
                 mTriggerPatternEdit[i]->lineEdit_pattern->setEnabled(true);
             }
         }
@@ -8734,8 +8729,7 @@ void dlgTriggerEditor::slot_scriptMainAreaEditHandler(QListWidgetItem*)
 void dlgTriggerEditor::slot_scriptMainAreaDeleteHandler()
 {
     // mpScriptsMainArea->listWidget_script_registered_event_handlers->takeItem(mpScriptsMainArea->listWidget_script_registered_event_handlers->currentRow());
-    if(mpScriptsMainArea->listWidget_script_registered_event_handlers->currentRow() < 0)
-    {
+    if (mpScriptsMainArea->listWidget_script_registered_event_handlers->currentRow() < 0) {
         return;
     }
     ScriptRemoveHandlerCommand* command = new ScriptRemoveHandlerCommand(mpScriptsMainArea);
@@ -8747,8 +8741,7 @@ void dlgTriggerEditor::slot_scriptMainAreaDeleteHandler()
 
 void dlgTriggerEditor::slot_scriptMainAreaAddHandler()
 {
-    if(mpScriptsMainArea->lineEdit_script_event_handler_entry->text().isEmpty())
-    {
+    if (mpScriptsMainArea->lineEdit_script_event_handler_entry->text().isEmpty()) {
         return;
     }
     auto addEventHandler = [&]() {
@@ -9817,8 +9810,7 @@ void dlgTriggerEditor::slot_keyGrab()
 
 void dlgTriggerEditor::slot_KeyNameTextEdited()
 {
-    if(mPrevKeyName == mpKeysMainArea->lineEdit_key_name->text())
-    {
+    if (mPrevKeyName == mpKeysMainArea->lineEdit_key_name->text()) {
         return;
     }
     KeyNameTextEditedCommand* command = new KeyNameTextEditedCommand(mpKeysMainArea);
@@ -9833,8 +9825,7 @@ void dlgTriggerEditor::slot_KeyNameTextEdited()
 
 void dlgTriggerEditor::slot_KeyCommandTextEdited()
 {
-    if(mPrevKeyCommand == mpKeysMainArea->lineEdit_key_command->text())
-    {
+    if (mPrevKeyCommand == mpKeysMainArea->lineEdit_key_command->text()) {
         return;
     }
     KeyCommandTextEditedCommand* command = new KeyCommandTextEditedCommand(mpKeysMainArea);
@@ -9913,8 +9904,7 @@ void dlgTriggerEditor::slot_toggleIsPushDownButton(const int state)
 
 void dlgTriggerEditor::slot_ActionNameTextEdited()
 {
-    if(mPrevActionName == mpActionsMainArea->lineEdit_action_name->text())
-    {
+    if (mPrevActionName == mpActionsMainArea->lineEdit_action_name->text()) {
         return;
     }
     ActionNameTextEditedCommand* command = new ActionNameTextEditedCommand(mpActionsMainArea);
@@ -9941,8 +9931,7 @@ void dlgTriggerEditor::slot_ActionButtonRotationEdited()
 
 void dlgTriggerEditor::slot_ActionCommandDownTextEdited()
 {
-    if(mPrevActionDown == mpActionsMainArea->lineEdit_action_button_command_down->text())
-    {
+    if (mPrevActionDown == mpActionsMainArea->lineEdit_action_button_command_down->text()) {
         return;
     }
     ActionCommandDownTextEditedCommand* command = new ActionCommandDownTextEditedCommand(mpActionsMainArea);
@@ -9957,8 +9946,7 @@ void dlgTriggerEditor::slot_ActionCommandDownTextEdited()
 
 void dlgTriggerEditor::slot_ActionCommandUpTextEdited()
 {
-    if(mPrevActionUp == mpActionsMainArea->lineEdit_action_button_command_up->text())
-    {
+    if (mPrevActionUp == mpActionsMainArea->lineEdit_action_button_command_up->text()) {
         return;
     }
     ActionCommandUpTextEditedCommand* command = new ActionCommandUpTextEditedCommand(mpActionsMainArea);
@@ -9973,8 +9961,7 @@ void dlgTriggerEditor::slot_ActionCommandUpTextEdited()
 
 void dlgTriggerEditor::slot_ActionCssTextEdited()
 {
-    if(mPrevActionCss == mpActionsMainArea->plainTextEdit_action_css->toPlainText())
-    {
+    if (mPrevActionCss == mpActionsMainArea->plainTextEdit_action_css->toPlainText()) {
         return;
     }
     ActionCssTextEditedCommand* command = new ActionCssTextEditedCommand(mpActionsMainArea);
@@ -10136,8 +10123,7 @@ void dlgTriggerEditor::slot_colorTriggerFg(int i)
         //: Color trigger ANSI foreground color button, ensure all three instances have the same text
         pB->setText(tr("Foreground color [ANSI %1]").arg(QString::number(pT->mColorTriggerFgAnsi)));
     }
-    if(pT->mColorTriggerFgAnsi == TTrigger::scmIgnored)
-    {
+    if (pT->mColorTriggerFgAnsi == TTrigger::scmIgnored) {
         return;
     }
 
@@ -10219,12 +10205,9 @@ void dlgTriggerEditor::slot_colorTriggerBg(int i)
     if (pT->mColorTriggerBgAnsi == TTrigger::scmIgnored) {
         return;
     }
-    if(i >= pT->mColorPatternList.size())
-    {
+    if (i >= pT->mColorPatternList.size()) {
         mPrevColorTriggerBgColor = QColor();
-    }
-    else
-    {
+    } else {
         mPrevColorTriggerBgColor = pT->mColorPatternList.at(i)->mBgColor;
     }
     TriggerColorBGEditedCommand* command = new TriggerColorBGEditedCommand(mpTriggersMainArea);
@@ -10643,7 +10626,7 @@ void dlgTriggerEditor::slot_triggerPlaySoundEdited(bool on)
     saveTrigger();
 }
 
-void dlgTriggerEditor::slot_triggerPlaySoundFileEdited(const QString &text)
+void dlgTriggerEditor::slot_triggerPlaySoundFileEdited(const QString& text)
 {
     TriggerPlaySoundFileEditedCommand* command = new TriggerPlaySoundFileEditedCommand(mpTriggersMainArea);
     command->mpEditor = this;
