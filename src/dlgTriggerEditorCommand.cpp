@@ -1405,14 +1405,18 @@ ActionCssTextEditedCommand::ActionCssTextEditedCommand(dlgActionMainArea* action
 
 int ActionCssTextEditedCommand::id() const
 {
-    return 5;
+    const short id = reinterpret_cast<uintptr_t>(typeid(this).name());
+    return id;
 }
 
 bool ActionCssTextEditedCommand::mergeWith(const QUndoCommand *other)
 {
-    if (other->id() != id()) // make sure other is also an ActionCssTextEditedCommand command
-        return false;
     QString text = static_cast<const ActionCssTextEditedCommand*>(other)->mActionCss;
+    if(text.length() < mActionCss.length())
+    {
+        mActionCss = text;
+        return false;
+    }
     QTextCursor cursor = mpActionsMainArea->plainTextEdit_action_css->textCursor();
     if(cursor.movePosition(QTextCursor::PreviousCharacter,QTextCursor::KeepAnchor))
     {
