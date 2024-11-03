@@ -191,8 +191,6 @@
         <file>icons/tag_checkbox_checked_grey.png</file>
         <file>icons/tools-report-bug.png</file>
         <file>icons/tools-wizard.png</file>
-        <file>icons/undo.png</file>
-        <file>icons/redo.png</file>
         <file>icons/unmute.png</file>
         <file>icons/utilities-file-archiver.png</file>
         <file>icons/variable.png</file>
@@ -224,5 +222,7 @@
         <file>ui/package_manager.ui</file>
         <file>ui/package_manager_unpack.ui</file>
         <file>ui/set_room_area.ui</file>
+        <file>icons/edit-redo.png</file>
+        <file>icons/edit-undo.png</file>
     </qresource>
 </RCC>

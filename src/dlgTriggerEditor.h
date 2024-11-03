@@ -93,6 +93,7 @@ class TAction;
 class TKey;
 class TConsole;
 class dlgVarsMainArea;
+class AddTriggerCommand;
 
 class dlgTriggerEditor : public QMainWindow, private Ui::trigger_editor
 {
@@ -354,10 +355,10 @@ private slots:
     void slot_ScriptNameTextEdited();
     void slot_TimerNameTextEdited();
     void slot_TimerCommandTextEdited();
-    void slot_TimerHoursTextEdited(QTime time);
-    void slot_TimerMinutesTextEdited(QTime time);
-    void slot_TimerSecondsTextEdited(QTime time);
-    void slot_TimerMilliSecondsTextEdited(QTime time);
+    void slot_TimerHoursTextEdited();
+    void slot_TimerMinutesTextEdited();
+    void slot_TimerSecondsTextEdited();
+    void slot_TimerMilliSecondsTextEdited();
     void slot_KeyNameTextEdited();
     void slot_KeyCommandTextEdited();
     void slot_ActionNameTextEdited();

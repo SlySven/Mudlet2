@@ -42,6 +42,7 @@
 #include "dlgKeysMainArea.h"
 #include "dlgScriptsMainArea.h"
 #include "dlgTriggerPatternEdit.h"
+#include "dlgTriggerEditorCommand.h"
 #include "mudlet.h"
 
 #include "pre_guard.h"
@@ -537,10 +538,10 @@ dlgTriggerEditor::dlgTriggerEditor(Host* pH)
     connect(mSaveItem, &QAction::triggered, this, &dlgTriggerEditor::slot_saveEdits);
 
     undoAction = undoStack->createUndoAction(this, tr("&Undo"));
-    undoAction->setIcon(QIcon(":/icons/undo.png"));
+    undoAction->setIcon(QIcon(":/icons/edit-undo.png"));
 
     redoAction = undoStack->createRedoAction(this, tr("&Redo"));
-    redoAction->setIcon(QIcon(":/icons/redo.png"));
+    redoAction->setIcon(QIcon(":/icons/edit-redo.png"));
 
     QAction* copyAction = new QAction(tr("Copy"), this);
     copyAction->setShortcut(QKeySequence(QKeySequence::Copy));
@@ -2815,13 +2816,10 @@ void dlgTriggerEditor::delete_trigger()
 void dlgTriggerEditor::deleteTriggerCommand()
 {
     QTreeWidgetItem* pItem = treeWidget_triggers->currentItem();
-    QTreeWidgetItem* parent = nullptr;
-    TriggerUnit* triggerUnit = mpHost->getTriggerUnit();
     dlgTriggerEditor* editor = this;
 
-    DeleteTriggerCommand* command = new DeleteTriggerCommand(pItem, triggerUnit, treeWidget_triggers);
+    DeleteTriggerCommand* command = new DeleteTriggerCommand(mpHost, pItem, treeWidget_triggers);
     command->mpEditor = editor;
-    command->mpHost = mpHost;
     undoStack->push(command);
 }
 
@@ -3891,10 +3889,8 @@ void dlgTriggerEditor::addTrigger(bool isFolder)
 void dlgTriggerEditor::addTriggerCommand(bool isFolder)
 {
     QTreeWidgetItem* pItem = nullptr;
-    QTreeWidgetItem* parent = nullptr;
-    TriggerUnit* triggerUnit = mpHost->getTriggerUnit();
     dlgTriggerEditor* editor = this;
-    AddTriggerCommand* command = new AddTriggerCommand(pItem, triggerUnit, treeWidget_triggers, isFolder);
+    AddTriggerCommand* command = new AddTriggerCommand(pItem, treeWidget_triggers, isFolder, nullptr);
     command->mpEditor = editor;
     undoStack->push(command);
 }
@@ -3902,10 +3898,8 @@ void dlgTriggerEditor::addTriggerCommand(bool isFolder)
 void dlgTriggerEditor::addAliasCommand(bool isFolder)
 {
     QTreeWidgetItem* pItem = nullptr;
-    QTreeWidgetItem* parent = nullptr;
-    AliasUnit* aliasUnit = mpHost->getAliasUnit();
     dlgTriggerEditor* editor = this;
-    AddAliasCommand* command = new AddAliasCommand(pItem, aliasUnit, treeWidget_aliases, isFolder);
+    AddAliasCommand* command = new AddAliasCommand(pItem, treeWidget_aliases, isFolder);
     command->mpEditor = editor;
     undoStack->push(command);
 }
@@ -3913,46 +3907,35 @@ void dlgTriggerEditor::addAliasCommand(bool isFolder)
 void dlgTriggerEditor::deleteAliasCommand()
 {
     QTreeWidgetItem* pItem = treeWidget_aliases->currentItem();
-    QTreeWidgetItem* parent = nullptr;
-    AliasUnit* aliasUnit = mpHost->getAliasUnit();
     dlgTriggerEditor* editor = this;
-    DeleteAliasCommand* command = new DeleteAliasCommand(pItem, aliasUnit, treeWidget_aliases);
+    DeleteAliasCommand* command = new DeleteAliasCommand(mpHost, pItem, treeWidget_aliases);
     command->mpEditor = editor;
-    command->mpHost = mpHost;
     undoStack->push(command);
 }
 
 void dlgTriggerEditor::deleteScriptCommand()
 {
     QTreeWidgetItem* pItem = treeWidget_scripts->currentItem();
-    QTreeWidgetItem* parent = nullptr;
-    ScriptUnit* scriptUnit = mpHost->getScriptUnit();
     dlgTriggerEditor* editor = this;
-    DeleteScriptCommand* command = new DeleteScriptCommand(pItem, scriptUnit, treeWidget_scripts);
+    DeleteScriptCommand* command = new DeleteScriptCommand(mpHost, pItem, treeWidget_scripts);
     command->mpEditor = editor;
-    command->mpHost = mpHost;
     undoStack->push(command);
 }
 
 void dlgTriggerEditor::deleteKeyCommand()
 {
     QTreeWidgetItem* pItem = treeWidget_keys->currentItem();
-    QTreeWidgetItem* parent = nullptr;
-    KeyUnit* keyUnit = mpHost->getKeyUnit();
     dlgTriggerEditor* editor = this;
-    DeleteKeyCommand* command = new DeleteKeyCommand(pItem, keyUnit, treeWidget_keys);
+    DeleteKeyCommand* command = new DeleteKeyCommand(mpHost, pItem, treeWidget_keys);
     command->mpEditor = editor;
-    command->mpHost = mpHost;
     undoStack->push(command);
 }
 
 void dlgTriggerEditor::addTimerCommand(bool isFolder)
 {
     QTreeWidgetItem* pItem = nullptr;
-    QTreeWidgetItem* parent = nullptr;
-    TimerUnit* timerUnit = mpHost->getTimerUnit();
     dlgTriggerEditor* editor = this;
-    AddTimerCommand* command = new AddTimerCommand(pItem, timerUnit, treeWidget_timers, isFolder);
+    AddTimerCommand* command = new AddTimerCommand(pItem, treeWidget_timers, isFolder);
     command->mpEditor = editor;
     undoStack->push(command);
 }
@@ -3960,10 +3943,8 @@ void dlgTriggerEditor::addTimerCommand(bool isFolder)
 void dlgTriggerEditor::addScriptCommand(bool isFolder)
 {
     QTreeWidgetItem* pItem = nullptr;
-    QTreeWidgetItem* parent = nullptr;
-    ScriptUnit* scriptUnit = mpHost->getScriptUnit();
     dlgTriggerEditor* editor = this;
-    AddScriptCommand* command = new AddScriptCommand(pItem, scriptUnit, treeWidget_scripts, isFolder);
+    AddScriptCommand* command = new AddScriptCommand(pItem, treeWidget_scripts, isFolder);
     command->mpEditor = editor;
     undoStack->push(command);
 }
@@ -3982,10 +3963,8 @@ void dlgTriggerEditor::slot_ScriptNameTextEdited()
 void dlgTriggerEditor::addKeyCommand(bool isFolder)
 {
     QTreeWidgetItem* pItem = nullptr;
-    QTreeWidgetItem* parent = nullptr;
-    KeyUnit* keyUnit = mpHost->getKeyUnit();
     dlgTriggerEditor* editor = this;
-    AddKeyCommand* command = new AddKeyCommand(pItem, keyUnit, treeWidget_keys, isFolder);
+    AddKeyCommand* command = new AddKeyCommand(pItem, treeWidget_keys, isFolder);
     command->mpEditor = editor;
     undoStack->push(command);
 }
@@ -3993,10 +3972,8 @@ void dlgTriggerEditor::addKeyCommand(bool isFolder)
 void dlgTriggerEditor::addActionCommand(bool isFolder)
 {
     QTreeWidgetItem* pItem = nullptr;
-    QTreeWidgetItem* parent = nullptr;
-    ActionUnit* actionUnit = mpHost->getActionUnit();
     dlgTriggerEditor* editor = this;
-    AddActionCommand* command = new AddActionCommand(pItem, actionUnit, treeWidget_actions, isFolder);
+    AddActionCommand* command = new AddActionCommand(pItem, treeWidget_actions, isFolder);
     command->mpEditor = editor;
     undoStack->push(command);
 }
@@ -4004,11 +3981,8 @@ void dlgTriggerEditor::addActionCommand(bool isFolder)
 void dlgTriggerEditor::addVarCommand(bool isFolder)
 {
     QTreeWidgetItem* pItem = nullptr;
-    QTreeWidgetItem* parent = nullptr;
-    LuaInterface* lI = mpHost->getLuaInterface();
-    VarUnit* varUnit = lI->getVarUnit();
     dlgTriggerEditor* editor = this;
-    AddVarCommand* command = new AddVarCommand(pItem, varUnit, treeWidget_variables, isFolder);
+    AddVarCommand* command = new AddVarCommand(pItem, treeWidget_variables, isFolder);
     command->mpEditor = editor;
     undoStack->push(command);
 }
@@ -4016,37 +3990,27 @@ void dlgTriggerEditor::addVarCommand(bool isFolder)
 void dlgTriggerEditor::deleteActionCommand()
 {
     QTreeWidgetItem* pItem = treeWidget_actions->currentItem();
-    QTreeWidgetItem* parent = nullptr;
-    ActionUnit* actionUnit = mpHost->getActionUnit();
     dlgTriggerEditor* editor = this;
-    DeleteActionCommand* command = new DeleteActionCommand(pItem, actionUnit, treeWidget_actions);
+    DeleteActionCommand* command = new DeleteActionCommand(mpHost, pItem, treeWidget_actions);
     command->mpEditor = editor;
-    command->mpHost = mpHost;
     undoStack->push(command);
 }
 
 void dlgTriggerEditor::deleteVarCommand()
 {
     QTreeWidgetItem* pItem = treeWidget_variables->currentItem();
-    QTreeWidgetItem* parent = nullptr;
-    LuaInterface* lI = mpHost->getLuaInterface();
-    VarUnit* varUnit = lI->getVarUnit();
     dlgTriggerEditor* editor = this;
-    DeleteVarCommand* command = new DeleteVarCommand(pItem, varUnit, treeWidget_variables);
+    DeleteVarCommand* command = new DeleteVarCommand(mpHost, pItem, treeWidget_variables);
     command->mpEditor = editor;
-    command->mpHost = mpHost;
     undoStack->push(command);
 }
 
 void dlgTriggerEditor::deleteTimerCommand()
 {
     QTreeWidgetItem* pItem = treeWidget_timers->currentItem();
-    QTreeWidgetItem* parent = nullptr;
-    TimerUnit* timerUnit = mpHost->getTimerUnit();
     dlgTriggerEditor* editor = this;
-    DeleteTimerCommand* command = new DeleteTimerCommand(pItem, timerUnit, treeWidget_timers);
+    DeleteTimerCommand* command = new DeleteTimerCommand(mpHost, pItem, treeWidget_timers);
     command->mpEditor = editor;
-    command->mpHost = mpHost;
     undoStack->push(command);
 }
 
@@ -5954,12 +5918,11 @@ void dlgTriggerEditor::slot_triggerLinePatternItemEdited(int i)
     if (i == mpPrevTriggerPatternItemEdit[row]) {
         return;
     }
-    TriggerLineEditPatternItemEditedCommand* command = new TriggerLineEditPatternItemEditedCommand(mpTriggersMainArea);
+    TriggerLineEditPatternItemEditedCommand* command = new TriggerLineEditPatternItemEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
     command->mpItem = treeWidget_triggers->currentItem();
     command->mRow = row;
-    command->mpTriggerUnit = mpHost->getTriggerUnit();
     command->mPrevTriggerPatternEdit = mpPrevTriggerPatternItemEdit[row];
     command->mTriggerPatternEdit = pPatternItem->comboBox_patternType->currentIndex();
     command->pBox = pBox;
@@ -8728,14 +8691,13 @@ void dlgTriggerEditor::slot_scriptMainAreaEditHandler(QListWidgetItem*)
 
 void dlgTriggerEditor::slot_scriptMainAreaDeleteHandler()
 {
-    // mpScriptsMainArea->listWidget_script_registered_event_handlers->takeItem(mpScriptsMainArea->listWidget_script_registered_event_handlers->currentRow());
     if (mpScriptsMainArea->listWidget_script_registered_event_handlers->currentRow() < 0) {
         return;
     }
     ScriptRemoveHandlerCommand* command = new ScriptRemoveHandlerCommand(mpScriptsMainArea);
     command->mpItem = treeWidget_scripts->currentItem();
     command->mpTreeWidgetScripts = treeWidget_scripts;
-    // command->m_script_eventhandler = mpScriptsMainArea->lineEdit_script_event_handler_entry->text();
+    command->mScriptEventhandler = mpScriptsMainArea->lineEdit_script_event_handler_entry->text();
     undoStack->push(command);
 }
 
@@ -9868,12 +9830,11 @@ void dlgTriggerEditor::keyGrabCallback(const Qt::Key key, const Qt::KeyboardModi
         return;
     }
     const QString keyName = pKeyUnit->getKeyName(key, modifier);
-    KeyGrabTextEditedCommand* command = new KeyGrabTextEditedCommand(mpKeysMainArea);
+    KeyGrabTextEditedCommand* command = new KeyGrabTextEditedCommand(mpHost, mpKeysMainArea);
     command->mpItem = treeWidget_keys->currentItem();
     command->mpTreeWidgetKeys = treeWidget_keys;
     command->mKey = key;
     command->mModifier = modifier;
-    command->mpKeyUnit = pKeyUnit;
     command->mPrevKeyName = mPrevKeyModifier;
     command->mKeyName = keyName;
     undoStack->push(command);
@@ -9882,15 +9843,6 @@ void dlgTriggerEditor::keyGrabCallback(const Qt::Key key, const Qt::KeyboardModi
 
 void dlgTriggerEditor::slot_toggleIsPushDownButton(const int state)
 {
-    // if (state == Qt::Checked) {
-    //     mpActionsMainArea->lineEdit_action_button_command_up->show();
-    //     mpActionsMainArea->label_action_button_command_up->show();
-    //     mpActionsMainArea->label_action_button_command_down->setText(tr("Command (down):"));
-    // } else {
-    //     mpActionsMainArea->lineEdit_action_button_command_up->hide();
-    //     mpActionsMainArea->label_action_button_command_up->hide();
-    //     mpActionsMainArea->label_action_button_command_down->setText(tr("Command:"));
-    // }
     ActionButtonCheckboxEditedCommand* command = new ActionButtonCheckboxEditedCommand(mpActionsMainArea);
     command->mpEditor = this;
     command->mpItem = treeWidget_actions->currentItem();
@@ -10127,11 +10079,10 @@ void dlgTriggerEditor::slot_colorTriggerFg(int i)
         return;
     }
 
-    TriggerColorFGEditedCommand* command = new TriggerColorFGEditedCommand(mpTriggersMainArea);
+    TriggerColorFGEditedCommand* command = new TriggerColorFGEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
     command->mpItem = pItem;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
-    command->mpTriggerUnit = mpHost->getTriggerUnit();
     command->mpPushButton = pB;
     command->mpTriggerPatternEdit = mTriggerPatternEdit;
     command->mRow = i;
@@ -10210,11 +10161,10 @@ void dlgTriggerEditor::slot_colorTriggerBg(int i)
     } else {
         mPrevColorTriggerBgColor = pT->mColorPatternList.at(i)->mBgColor;
     }
-    TriggerColorBGEditedCommand* command = new TriggerColorBGEditedCommand(mpTriggersMainArea);
+    TriggerColorBGEditedCommand* command = new TriggerColorBGEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
     command->mpItem = pItem;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
-    command->mpTriggerUnit = mpHost->getTriggerUnit();
     command->mpPushButton = pB;
     command->mpPatternItem = pPatternItem;
     command->mPrevColorTriggerBgColor = mPrevColorTriggerBgColor;
@@ -10771,7 +10721,7 @@ void dlgTriggerEditor::slot_TimerCommandTextEdited()
     saveTimer();
 }
 
-void dlgTriggerEditor::slot_TimerHoursTextEdited(QTime time)
+void dlgTriggerEditor::slot_TimerHoursTextEdited()
 {
     TimerHoursTextEditedCommand* command = new TimerHoursTextEditedCommand(mpTimersMainArea);
     command->mpItem = treeWidget_timers->currentItem();
@@ -10783,7 +10733,7 @@ void dlgTriggerEditor::slot_TimerHoursTextEdited(QTime time)
     saveTimer();
 }
 
-void dlgTriggerEditor::slot_TimerMinutesTextEdited(QTime time)
+void dlgTriggerEditor::slot_TimerMinutesTextEdited()
 {
     TimerMinutesTextEditedCommand* command = new TimerMinutesTextEditedCommand(mpTimersMainArea);
     command->mpItem = treeWidget_timers->currentItem();
@@ -10795,7 +10745,7 @@ void dlgTriggerEditor::slot_TimerMinutesTextEdited(QTime time)
     saveTimer();
 }
 
-void dlgTriggerEditor::slot_TimerSecondsTextEdited(QTime time)
+void dlgTriggerEditor::slot_TimerSecondsTextEdited()
 {
     TimerSecondsTextEditedCommand* command = new TimerSecondsTextEditedCommand(mpTimersMainArea);
     command->mpItem = treeWidget_timers->currentItem();
@@ -10807,7 +10757,7 @@ void dlgTriggerEditor::slot_TimerSecondsTextEdited(QTime time)
     saveTimer();
 }
 
-void dlgTriggerEditor::slot_TimerMilliSecondsTextEdited(QTime time)
+void dlgTriggerEditor::slot_TimerMilliSecondsTextEdited()
 {
     TimerMilliSecondsTextEditedCommand* command = new TimerMilliSecondsTextEditedCommand(mpTimersMainArea);
     command->mpItem = treeWidget_timers->currentItem();

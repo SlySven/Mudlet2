@@ -625,6 +625,7 @@ SOURCES += \
     dlgSystemMessageArea.cpp \
     dlgTimersMainArea.cpp \
     dlgTriggerEditor.cpp \
+    dlgTriggerEditorCommand.cpp \
     dlgTriggerPatternEdit.cpp \
     dlgTriggersMainArea.cpp \
     dlgVarsMainArea.cpp \

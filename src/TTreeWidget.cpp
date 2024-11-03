@@ -266,9 +266,7 @@ void TTreeWidget::rowsInserted(const QModelIndex& parent, int start, int end)
             if (newParentID != m_ParentItemID) {
                 mParentItem = mParentItem->parent();
             }
-            TriggerUnit* triggerUnit = mpHost->getTriggerUnit();
-            MoveTriggerCommand* command = new MoveTriggerCommand(triggerUnit, this, mChildID, mOldParentID, newParentID, parentPosition, childPosition, mPrevParentPosition, mPrevChildPosition);
-            command->mpHost = mpHost;
+            MoveTriggerCommand* command = new MoveTriggerCommand(mpHost, this, mChildID, mOldParentID, newParentID, parentPosition, childPosition, mPrevParentPosition, mPrevChildPosition);
             command->mParent = parent;
             command->mStart = start;
             command->mEnd = end;
@@ -286,9 +284,7 @@ void TTreeWidget::rowsInserted(const QModelIndex& parent, int start, int end)
             if (newParentID != m_ParentItemID) {
                 mParentItem = mParentItem->parent();
             }
-            AliasUnit* aliasUnit = mpHost->getAliasUnit();
-            MoveAliasCommand* command = new MoveAliasCommand(aliasUnit, this, mChildID, mOldParentID, newParentID, parentPosition, childPosition, mPrevParentPosition, mPrevChildPosition);
-            command->mpHost = mpHost;
+            MoveAliasCommand* command = new MoveAliasCommand(mpHost, this, mChildID, mOldParentID, newParentID, parentPosition, childPosition, mPrevParentPosition, mPrevChildPosition);
             command->mParent = parent;
             command->mStart = start;
             command->mEnd = end;
@@ -306,9 +302,7 @@ void TTreeWidget::rowsInserted(const QModelIndex& parent, int start, int end)
             if (newParentID != m_ParentItemID) {
                 mParentItem = mParentItem->parent();
             }
-            KeyUnit* keyUnit = mpHost->getKeyUnit();
-            MoveKeyCommand* command = new MoveKeyCommand(keyUnit, this, mChildID, mOldParentID, newParentID, parentPosition, childPosition, mPrevParentPosition, mPrevChildPosition);
-            command->mpHost = mpHost;
+            MoveKeyCommand* command = new MoveKeyCommand(mpHost, this, mChildID, mOldParentID, newParentID, parentPosition, childPosition, mPrevParentPosition, mPrevChildPosition);
             command->mParent = parent;
             command->mStart = start;
             command->mEnd = end;
@@ -326,8 +320,7 @@ void TTreeWidget::rowsInserted(const QModelIndex& parent, int start, int end)
             if (newParentID != m_ParentItemID) {
                 mParentItem = mParentItem->parent();
             }
-            TimerUnit* timerUnit = mpHost->getTimerUnit();
-            MoveTimerCommand* command = new MoveTimerCommand(timerUnit, this, mChildID, mOldParentID, newParentID, parentPosition, childPosition, mPrevParentPosition, mPrevChildPosition);
+            MoveTimerCommand* command = new MoveTimerCommand(mpHost, this, mChildID, mOldParentID, newParentID, parentPosition, childPosition, mPrevParentPosition, mPrevChildPosition);
             command->mpHost = mpHost;
             command->mParent = parent;
             command->mStart = start;
@@ -380,8 +373,7 @@ void TTreeWidget::rowsInserted(const QModelIndex& parent, int start, int end)
             if (newParentID != m_ParentItemID) {
                 mParentItem = mParentItem->parent();
             }
-            ScriptUnit* scriptUnit = mpHost->getScriptUnit();
-            MoveScriptCommand* command = new MoveScriptCommand(scriptUnit, this, mChildID, mOldParentID, newParentID, parentPosition, childPosition, mPrevParentPosition, mPrevChildPosition);
+            MoveScriptCommand* command = new MoveScriptCommand(mpHost, this, mChildID, mOldParentID, newParentID, parentPosition, childPosition, mPrevParentPosition, mPrevChildPosition);
             command->mpHost = mpHost;
             command->mParent = parent;
             command->mStart = start;
@@ -400,9 +392,7 @@ void TTreeWidget::rowsInserted(const QModelIndex& parent, int start, int end)
             if (newParentID != m_ParentItemID) {
                 mParentItem = mParentItem->parent();
             }
-            ActionUnit* actionUnit = mpHost->getActionUnit();
-            MoveActionCommand* command = new MoveActionCommand(actionUnit, this, mChildID, mOldParentID, newParentID, parentPosition, childPosition, mPrevParentPosition, mPrevChildPosition);
-            command->mpHost = mpHost;
+            MoveActionCommand* command = new MoveActionCommand(mpHost, this, mChildID, mOldParentID, newParentID, parentPosition, childPosition, mPrevParentPosition, mPrevChildPosition);
             command->mParent = parent;
             command->mStart = start;
             command->mEnd = end;
@@ -479,9 +469,7 @@ void TTreeWidget::dropEvent(QDropEvent* event)
         if (newParentID != m_ParentItemID) {
             mParentItem = pItem->parent();
         }
-        VarUnit* varUnit = lI->getVarUnit();
-        MoveVariableCommand* command = new MoveVariableCommand(varUnit, this, newpItem, cItem, oldpItem);
-        command->mpHost = mpHost;
+        MoveVariableCommand* command = new MoveVariableCommand(mpHost, this, newpItem, cItem, oldpItem);
         command->mpEvent = event;
         if (mpUndoStack) {
             mpUndoStack->push(command);

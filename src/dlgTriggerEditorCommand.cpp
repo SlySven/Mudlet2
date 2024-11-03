@@ -1,6 +1,7 @@
 #include "dlgTriggerEditorCommand.h"
 #include "Host.h"
 #include "LuaInterface.h"
+#include "VarUnit.h"
 #include "dlgActionMainArea.h"
 #include "dlgAliasMainArea.h"
 #include "dlgKeysMainArea.h"
@@ -10,9 +11,8 @@
 #include "mudlet.h"
 #include <QPointer>
 
-AddTriggerCommand::AddTriggerCommand(QTreeWidgetItem* pItem, TriggerUnit* triggerUnit, TTreeWidget* treeWidgetTriggers, bool isFolder, QUndoCommand* parent) : QUndoCommand(parent)
+AddTriggerCommand::AddTriggerCommand(QTreeWidgetItem* pItem, TTreeWidget* treeWidgetTriggers, bool isFolder, QUndoCommand* parent) : QUndoCommand(parent)
 {
-    mpTriggerUnit = triggerUnit;
     mpTreeWidgetTriggers = treeWidgetTriggers;
     mIsFolder = isFolder;
     mpItem = pItem;
@@ -53,11 +53,11 @@ void AddTriggerCommand::redo()
     setText(QObject::tr("Add Trigger"));
 }
 
-DeleteTriggerCommand::DeleteTriggerCommand(QTreeWidgetItem* pItem, TriggerUnit* triggerUnit, TTreeWidget* treeWidgetTriggers, QUndoCommand* parent) : QUndoCommand(parent)
+DeleteTriggerCommand::DeleteTriggerCommand(Host* pHost, QTreeWidgetItem* pItem, TTreeWidget* treeWidgetTriggers, QUndoCommand* parent)
+    : QUndoCommand(parent), mpHost(pHost)
 {
     mpItem = pItem;
     mpParent = mpItem->parent();
-    mpTriggerUnit = triggerUnit;
     mpTreeWidgetTriggers = treeWidgetTriggers;
 }
 
@@ -87,7 +87,7 @@ void DeleteTriggerCommand::redo()
     }
     if (mpItem) {
         const int ID = mpItem->data(0, Qt::UserRole).toInt();
-        TTrigger* p = mpTriggerUnit->getTrigger(ID);
+        TTrigger* p = mpHost->getTriggerUnit()->getTrigger(ID);
         TTrigger* ptr = new TTrigger(p->mName, p->mPatterns, p->getRegexCodePropertyList(), false, mpHost);
         ptr->registerTrigger();
         mpItemTrigger = ptr;
@@ -96,7 +96,7 @@ void DeleteTriggerCommand::redo()
     setText(QObject::tr("Delete Trigger"));
 }
 
-MoveTriggerCommand::MoveTriggerCommand(TriggerUnit* triggerUnit,
+MoveTriggerCommand::MoveTriggerCommand(Host* pHost,
                                        TTreeWidget* treeWidgetTriggers,
                                        int childID,
                                        int oldParentID,
@@ -106,7 +106,7 @@ MoveTriggerCommand::MoveTriggerCommand(TriggerUnit* triggerUnit,
                                        int prevParentPosition,
                                        int prevChildPosition,
                                        QUndoCommand* parent)
-: QUndoCommand(parent)
+: QUndoCommand(parent), mpHost(pHost)
 {
     mChildID = childID;
     mOldParentID = oldParentID;
@@ -115,7 +115,6 @@ MoveTriggerCommand::MoveTriggerCommand(TriggerUnit* triggerUnit,
     mChildPosition = childPosition;
     mPrevParentPosition = prevParentPosition;
     mPrevChildPosition = prevChildPosition;
-    mpTriggerUnit = triggerUnit;
     mpTreeWidgetTriggers = treeWidgetTriggers;
 }
 
@@ -145,9 +144,8 @@ void MoveTriggerCommand::redo()
     setText(QObject::tr("Move Trigger"));
 }
 
-AddAliasCommand::AddAliasCommand(QTreeWidgetItem* pItem, AliasUnit* aliasUnit, TTreeWidget* treeWidget_aliases, bool isFolder, QUndoCommand* parent)
+AddAliasCommand::AddAliasCommand(QTreeWidgetItem* pItem, TTreeWidget* treeWidget_aliases, bool isFolder, QUndoCommand* parent)
 {
-    mpAliasUnit = aliasUnit;
     mpTreeWidgetAliases = treeWidget_aliases;
     mIsFolder = isFolder;
     mpItem = pItem;
@@ -188,11 +186,10 @@ void AddAliasCommand::redo()
     setText(QObject::tr("Add Alias"));
 }
 
-DeleteAliasCommand::DeleteAliasCommand(QTreeWidgetItem* pItem, AliasUnit* aliasUnit, TTreeWidget* treeWidget_aliases, QUndoCommand* parent) : QUndoCommand(parent)
+DeleteAliasCommand::DeleteAliasCommand(Host* pHost, QTreeWidgetItem* pItem, TTreeWidget* treeWidget_aliases, QUndoCommand* parent) : QUndoCommand(parent), mpHost(pHost)
 {
     mpItem = pItem;
     mpParent = mpItem->parent();
-    mpAliasUnit = aliasUnit;
     mpTreeWidgetAliases = treeWidget_aliases;
 }
 
@@ -223,7 +220,7 @@ void DeleteAliasCommand::redo()
     }
     if (mpItem) {
         const int ID = mpItem->data(0, Qt::UserRole).toInt();
-        TAlias* p = mpAliasUnit->getAlias(ID);
+        TAlias* p = mpHost->getAliasUnit()->getAlias(ID);
         TAlias* ptr = new TAlias(p->mName, mpHost);
         ptr->registerAlias();
         mpItemAlias = ptr;
@@ -232,7 +229,7 @@ void DeleteAliasCommand::redo()
     setText(QObject::tr("Delete Alias"));
 }
 
-MoveAliasCommand::MoveAliasCommand(AliasUnit* aliasUnit,
+MoveAliasCommand::MoveAliasCommand(Host* pHost,
                                    TTreeWidget* treeWidget_aliases,
                                    int childID,
                                    int oldParentID,
@@ -242,7 +239,7 @@ MoveAliasCommand::MoveAliasCommand(AliasUnit* aliasUnit,
                                    int prevParentPosition,
                                    int prevChildPosition,
                                    QUndoCommand* parent)
-: QUndoCommand(parent)
+: QUndoCommand(parent), mpHost(pHost)
 {
     mChildID = childID;
     mOldParentID = oldParentID;
@@ -251,7 +248,6 @@ MoveAliasCommand::MoveAliasCommand(AliasUnit* aliasUnit,
     mChildPosition = childPosition;
     mPrevParentPosition = prevParentPosition;
     mPrevChildPosition = prevChildPosition;
-    mpAliasUnit = aliasUnit;
     mpTreeWidgetAliases = treeWidget_aliases;
 }
 
@@ -353,9 +349,8 @@ void AliasPatternTextEditedCommand::redo()
     setText(QObject::tr("Edit alias pattern"));
 }
 
-AddTimerCommand::AddTimerCommand(QTreeWidgetItem* pItem, TimerUnit* timerUnit, TTreeWidget* treeWidgetTimers, bool isFolder, QUndoCommand* parent)
+AddTimerCommand::AddTimerCommand(QTreeWidgetItem* pItem, TTreeWidget* treeWidgetTimers, bool isFolder, QUndoCommand* parent)
 {
-    mpTimerUnit = timerUnit;
     mpTreeWidgetTimers = treeWidgetTimers;
     mIsFolder = isFolder;
     mpItem = pItem;
@@ -396,11 +391,10 @@ void AddTimerCommand::redo()
     setText(QObject::tr("Add Timer"));
 }
 
-DeleteTimerCommand::DeleteTimerCommand(QTreeWidgetItem* pItem, TimerUnit* timerUnit, TTreeWidget* treeWidgetTimers, QUndoCommand* parent) : QUndoCommand(parent)
+DeleteTimerCommand::DeleteTimerCommand(Host* pHost, QTreeWidgetItem* pItem, TTreeWidget* treeWidgetTimers, QUndoCommand* parent) : QUndoCommand(parent), mpHost(pHost)
 {
     mpItem = pItem;
     mpParent = mpItem->parent();
-    mpTimerUnit = timerUnit;
     mpTreeWidgetTimers = treeWidgetTimers;
 }
 
@@ -431,7 +425,7 @@ void DeleteTimerCommand::redo()
     }
     if (mpItem) {
         const int ID = mpItem->data(0, Qt::UserRole).toInt();
-        TTimer* p = mpTimerUnit->getTimer(ID);
+        TTimer* p = mpHost->getTimerUnit()->getTimer(ID);
         TTimer* ptr = new TTimer(p->getName(), p->getTime(), mpHost);
         mpHost->getTimerUnit()->registerTimer(ptr);
         mpItemTimer = ptr;
@@ -440,7 +434,7 @@ void DeleteTimerCommand::redo()
     setText(QObject::tr("Delete Timer"));
 }
 
-MoveTimerCommand::MoveTimerCommand(TimerUnit* timerUnit,
+MoveTimerCommand::MoveTimerCommand(Host* pHost,
                                    TTreeWidget* treeWidgetTimers,
                                    int childID,
                                    int oldParentID,
@@ -450,7 +444,7 @@ MoveTimerCommand::MoveTimerCommand(TimerUnit* timerUnit,
                                    int prevParentPosition,
                                    int prevChildPosition,
                                    QUndoCommand* parent)
-: QUndoCommand(parent)
+: QUndoCommand(parent), mpHost(pHost)
 {
     mChildID = childID;
     mOldParentID = oldParentID;
@@ -459,7 +453,6 @@ MoveTimerCommand::MoveTimerCommand(TimerUnit* timerUnit,
     mChildPosition = childPosition;
     mPrevParentPosition = prevParentPosition;
     mPrevChildPosition = prevChildPosition;
-    mpTimerUnit = timerUnit;
     mpTreeWidgetTimers = treeWidgetTimers;
 }
 
@@ -649,9 +642,8 @@ void TimerMilliSecondsTextEditedCommand::redo()
     setText(QObject::tr("Edit timer msecs"));
 }
 
-AddScriptCommand::AddScriptCommand(QTreeWidgetItem* pItem, ScriptUnit* scriptUnit, TTreeWidget* treeWidget_scripts, bool isFolder, QUndoCommand* parent)
+AddScriptCommand::AddScriptCommand(QTreeWidgetItem* pItem, TTreeWidget* treeWidget_scripts, bool isFolder, QUndoCommand* parent)
 {
-    mpScriptUnit = scriptUnit;
     mpTreeWidgetScripts = treeWidget_scripts;
     mIsFolder = isFolder;
     mpItem = pItem;
@@ -692,11 +684,10 @@ void AddScriptCommand::redo()
     setText(QObject::tr("Add Script"));
 }
 
-DeleteScriptCommand::DeleteScriptCommand(QTreeWidgetItem* pItem, ScriptUnit* scriptUnit, TTreeWidget* treeWidget_scripts, QUndoCommand* parent) : QUndoCommand(parent)
+DeleteScriptCommand::DeleteScriptCommand(Host* pHost, QTreeWidgetItem* pItem, TTreeWidget* treeWidget_scripts, QUndoCommand* parent) : QUndoCommand(parent)
 {
     mpItem = pItem;
     mpParent = mpItem->parent();
-    mpScriptUnit = scriptUnit;
     mpTreeWidgetScripts = treeWidget_scripts;
 }
 
@@ -727,7 +718,7 @@ void DeleteScriptCommand::redo()
     }
     if (mpItem) {
         const int ID = mpItem->data(0, Qt::UserRole).toInt();
-        TScript* p = mpScriptUnit->getScript(ID);
+        TScript* p = mpHost->getScriptUnit()->getScript(ID);
         TScript* ptr = new TScript(p->getName(), mpHost);
         ptr->registerScript();
         mpItemScript = ptr;
@@ -736,7 +727,7 @@ void DeleteScriptCommand::redo()
     setText(QObject::tr("Delete Script"));
 }
 
-MoveScriptCommand::MoveScriptCommand(ScriptUnit* scriptUnit,
+MoveScriptCommand::MoveScriptCommand(Host* pHost,
                                      TTreeWidget* treeWidget_scripts,
                                      int childID,
                                      int oldParentID,
@@ -746,7 +737,7 @@ MoveScriptCommand::MoveScriptCommand(ScriptUnit* scriptUnit,
                                      int prevParentPosition,
                                      int prevChildPosition,
                                      QUndoCommand* parent)
-: QUndoCommand(parent)
+: QUndoCommand(parent), mpHost(pHost)
 {
     mChildID = childID;
     mOldParentID = oldParentID;
@@ -755,7 +746,6 @@ MoveScriptCommand::MoveScriptCommand(ScriptUnit* scriptUnit,
     mChildPosition = childPosition;
     mPrevParentPosition = prevParentPosition;
     mPrevChildPosition = prevChildPosition;
-    mpScriptUnit = scriptUnit;
     mpTreeWidgetScripts = treeWidget_scripts;
 }
 
@@ -870,9 +860,8 @@ void ScriptRemoveHandlerCommand::redo()
     setText(QObject::tr("Remove script handler"));
 }
 
-AddKeyCommand::AddKeyCommand(QTreeWidgetItem* pItem, KeyUnit* keyUnit, TTreeWidget* treeWidget_keys, bool isFolder, QUndoCommand* parent)
+AddKeyCommand::AddKeyCommand(QTreeWidgetItem* pItem, TTreeWidget* treeWidget_keys, bool isFolder, QUndoCommand* parent)
 {
-    mpKeyUnit = keyUnit;
     mpTreeWidgetKeys = treeWidget_keys;
     mIsFolder = isFolder;
     mpItem = pItem;
@@ -913,11 +902,10 @@ void AddKeyCommand::redo()
     setText(QObject::tr("Add Key"));
 }
 
-DeleteKeyCommand::DeleteKeyCommand(QTreeWidgetItem* pItem, KeyUnit* keyUnit, TTreeWidget* treeWidget_keys, QUndoCommand* parent) : QUndoCommand(parent)
+DeleteKeyCommand::DeleteKeyCommand(Host* pHost, QTreeWidgetItem* pItem, TTreeWidget* treeWidget_keys, QUndoCommand* parent) : QUndoCommand(parent), mpHost(pHost)
 {
     mpItem = pItem;
     mpParent = mpItem->parent();
-    mpKeyUnit = keyUnit;
     mpTreeWidgetKeys = treeWidget_keys;
 }
 
@@ -948,7 +936,7 @@ void DeleteKeyCommand::redo()
     }
     if (mpItem) {
         const int ID = mpItem->data(0, Qt::UserRole).toInt();
-        TKey* p = mpKeyUnit->getKey(ID);
+        TKey* p = mpHost->getKeyUnit()->getKey(ID);
         TKey* ptr = new TKey(p->getName(), mpHost);
         ptr->registerKey();
         mpItemKey = ptr;
@@ -956,7 +944,7 @@ void DeleteKeyCommand::redo()
     }
     setText(QObject::tr("Delete Key"));
 }
-MoveKeyCommand::MoveKeyCommand(KeyUnit* keyUnit,
+MoveKeyCommand::MoveKeyCommand(Host* pHost,
                                TTreeWidget* treeWidget_keys,
                                int childID,
                                int oldParentID,
@@ -966,7 +954,7 @@ MoveKeyCommand::MoveKeyCommand(KeyUnit* keyUnit,
                                int prevParentPosition,
                                int prevChildPosition,
                                QUndoCommand* parent)
-: QUndoCommand(parent)
+: QUndoCommand(parent), mpHost(pHost)
 {
     mChildID = childID;
     mOldParentID = oldParentID;
@@ -975,7 +963,6 @@ MoveKeyCommand::MoveKeyCommand(KeyUnit* keyUnit,
     mChildPosition = childPosition;
     mPrevParentPosition = prevParentPosition;
     mPrevChildPosition = prevChildPosition;
-    mpKeyUnit = keyUnit;
     mpTreeWidgetKeys = treeWidget_keys;
 }
 
@@ -1061,7 +1048,8 @@ void KeyCommandTextEditedCommand::redo()
     setText(QObject::tr("Edit key command"));
 }
 
-KeyGrabTextEditedCommand::KeyGrabTextEditedCommand(dlgKeysMainArea* keysMainArea, QUndoCommand* parent)
+KeyGrabTextEditedCommand::KeyGrabTextEditedCommand(Host* pHost, dlgKeysMainArea* keysMainArea, QUndoCommand* parent)
+    : QUndoCommand(parent), mpHost(pHost)
 {
     mpKeysMainArea = keysMainArea;
 }
@@ -1073,7 +1061,7 @@ void KeyGrabTextEditedCommand::undo()
     }
     mpTreeWidgetKeys->setCurrentItem(mpItem);
     const int triggerID = mpItem->data(0, Qt::UserRole).toInt();
-    TKey* pT = mpKeyUnit->getKey(triggerID);
+    TKey* pT = mpHost->getKeyUnit()->getKey(triggerID);
     if (pT) {
         pT->setKeyCode(mPrevKey);
         pT->setKeyModifiers(mPrevModifier);
@@ -1090,7 +1078,7 @@ void KeyGrabTextEditedCommand::redo()
     }
     mpTreeWidgetKeys->setCurrentItem(mpItem);
     const int triggerID = mpItem->data(0, Qt::UserRole).toInt();
-    TKey* pT = mpKeyUnit->getKey(triggerID);
+    TKey* pT = mpHost->getKeyUnit()->getKey(triggerID);
     if (pT) {
         mPrevKey = pT->getKeyCode();
         mPrevModifier = pT->getKeyModifiers();
@@ -1103,9 +1091,8 @@ void KeyGrabTextEditedCommand::redo()
     setText(QObject::tr("Edit key modifer"));
 }
 
-AddActionCommand::AddActionCommand(QTreeWidgetItem* pItem, ActionUnit* actionUnit, TTreeWidget* treeWidget_actions, bool isFolder, QUndoCommand* parent)
+AddActionCommand::AddActionCommand(QTreeWidgetItem* pItem, TTreeWidget* treeWidget_actions, bool isFolder, QUndoCommand* parent)
 {
-    mpActionUnit = actionUnit;
     mpTreeWidgetActions = treeWidget_actions;
     mIsFolder = isFolder;
     mpItem = pItem;
@@ -1145,11 +1132,10 @@ void AddActionCommand::redo()
 
     setText(QObject::tr("Add Action"));
 }
-DeleteActionCommand::DeleteActionCommand(QTreeWidgetItem* pItem, ActionUnit* actionUnit, TTreeWidget* treeWidget_actions, QUndoCommand* parent) : QUndoCommand(parent)
+DeleteActionCommand::DeleteActionCommand(Host* pHost, QTreeWidgetItem* pItem, TTreeWidget* treeWidget_actions, QUndoCommand* parent) : QUndoCommand(parent), mpHost(pHost)
 {
     mpItem = pItem;
     mpParent = mpItem->parent();
-    mpActionUnit = actionUnit;
     mpTreeWidgetActions = treeWidget_actions;
 }
 
@@ -1180,7 +1166,7 @@ void DeleteActionCommand::redo()
     }
     if (mpItem) {
         const int ID = mpItem->data(0, Qt::UserRole).toInt();
-        TAction* p = mpActionUnit->getAction(ID);
+        TAction* p = mpHost->getActionUnit()->getAction(ID);
         TAction* ptr = new TAction(p->getName(), mpHost);
         ptr->registerAction();
         mpItemAction = ptr;
@@ -1188,7 +1174,7 @@ void DeleteActionCommand::redo()
     }
     setText(QObject::tr("Delete Action"));
 }
-MoveActionCommand::MoveActionCommand(ActionUnit* actionUnit,
+MoveActionCommand::MoveActionCommand(Host* pHost,
                                      TTreeWidget* treeWidget_actions,
                                      int childID,
                                      int oldParentID,
@@ -1198,7 +1184,7 @@ MoveActionCommand::MoveActionCommand(ActionUnit* actionUnit,
                                      int prevParentPosition,
                                      int prevChildPosition,
                                      QUndoCommand* parent)
-: QUndoCommand(parent)
+: QUndoCommand(parent), mpHost(pHost)
 {
     mChildID = childID;
     mOldParentID = oldParentID;
@@ -1207,7 +1193,6 @@ MoveActionCommand::MoveActionCommand(ActionUnit* actionUnit,
     mChildPosition = childPosition;
     mPrevParentPosition = prevParentPosition;
     mPrevChildPosition = prevChildPosition;
-    mpActionUnit = actionUnit;
     mpTreeWidgetActions = treeWidget_actions;
 }
 
@@ -1458,9 +1443,8 @@ void ActionCssTextEditedCommand::redo()
     setText(QObject::tr("Edit action css"));
 }
 
-AddVarCommand::AddVarCommand(QTreeWidgetItem* pItem, VarUnit* varUnit, TTreeWidget* treeWidget_variables, bool isFolder, QUndoCommand* parent)
+AddVarCommand::AddVarCommand(QTreeWidgetItem* pItem, TTreeWidget* treeWidget_variables, bool isFolder, QUndoCommand* parent)
 {
-    mpVarUnit = varUnit;
     mpTreeWidgetVariables = treeWidget_variables;
     mIsFolder = isFolder;
     mpItem = pItem;
@@ -1506,11 +1490,10 @@ void AddVarCommand::redo()
 
     setText(QObject::tr("Add Variable"));
 }
-DeleteVarCommand::DeleteVarCommand(QTreeWidgetItem* pItem, VarUnit* varUnit, TTreeWidget* treeWidget_variables, QUndoCommand* parent) : QUndoCommand(parent)
+DeleteVarCommand::DeleteVarCommand(Host* pHost, QTreeWidgetItem* pItem, TTreeWidget* treeWidget_variables, QUndoCommand* parent) : QUndoCommand(parent), mpHost(pHost)
 {
     mpItem = pItem;
     mpParent = mpItem->parent();
-    mpVarUnit = varUnit;
     mpTreeWidgetVariables = treeWidget_variables;
 }
 
@@ -1527,13 +1510,14 @@ void DeleteVarCommand::undo()
         }
         TVar* parent = mpTempVar->getParent();
         parent->addChild(mpTempVar);
-        mpVarUnit->addTreeItem(mpItem, mpTempVar);
+        LuaInterface* lI = mpHost->getLuaInterface();
+        lI->getVarUnit()->addTreeItem(mpItem, mpTempVar);
 
         mpParent->addChild(mpItem);
         QList<QTreeWidgetItem*> list;
         mpEditor->recurseVariablesDown(mpItem, list);
         for (auto& treeWidgetItem : list) {
-            TVar* v = mpVarUnit->getWVar(treeWidgetItem);
+            TVar* v = lI->getVarUnit()->getWVar(treeWidgetItem);
             TVar* vparent = v->getParent();
             const void* pval = vparent->pValue;
             if (v->getParent()->hidden) {
@@ -1558,7 +1542,8 @@ void DeleteVarCommand::redo()
         mpTreeWidgetVariables->setCurrentItem(mpItem);
         if (!mpItemVar) {
             mpItemVar = new TVar();
-            TVar* p = mpVarUnit->getWVar(mpItem);
+            LuaInterface* lI = mpHost->getLuaInterface();
+            TVar* p = lI->getVarUnit()->getWVar(mpItem);
             *mpItemVar = *p;
         }
         mpEditor->delete_variable();
@@ -1567,10 +1552,9 @@ void DeleteVarCommand::redo()
     setText(QObject::tr("Delete Variable"));
 }
 MoveVariableCommand::MoveVariableCommand(
-        VarUnit* varUnit, TTreeWidget* treeWidget_variables, QTreeWidgetItem* parentItem, QTreeWidgetItem* cItem, QTreeWidgetItem* prevParentItem, QUndoCommand* parent)
-: QUndoCommand(parent)
+        Host* pHost, TTreeWidget* treeWidget_variables, QTreeWidgetItem* parentItem, QTreeWidgetItem* cItem, QTreeWidgetItem* prevParentItem, QUndoCommand* parent)
+: QUndoCommand(parent), mpHost(pHost)
 {
-    mpVarUnit = varUnit;
     mpTreeWidgetVariables = treeWidget_variables;
     mpParentItem = parentItem;
     mpItem = cItem;
@@ -1583,7 +1567,6 @@ void MoveVariableCommand::undo()
         return;
     }
     LuaInterface* lI = mpHost->getLuaInterface();
-    VarUnit* varUnit = lI->getVarUnit();
     if (!lI->reparentVariable(mpPrevParentItem, mpItem, mpParentItem)) {
         mpEvent->setDropAction(Qt::IgnoreAction);
         mpEvent->ignore();
@@ -1596,7 +1579,6 @@ void MoveVariableCommand::undo()
 void MoveVariableCommand::redo()
 {
     LuaInterface* lI = mpHost->getLuaInterface();
-    VarUnit* varUnit = lI->getVarUnit();
     if (!lI->reparentVariable(mpParentItem, mpItem, mpPrevParentItem)) {
         mpEvent->setDropAction(Qt::IgnoreAction);
         mpEvent->ignore();
@@ -1970,7 +1952,7 @@ void TriggerLineMarginEditedCommand::redo()
     setText(QObject::tr("Edit line margin"));
 }
 
-TriggerLineEditPatternItemEditedCommand::TriggerLineEditPatternItemEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
+TriggerLineEditPatternItemEditedCommand::TriggerLineEditPatternItemEditedCommand(Host* pHost, dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent), mpHost(pHost)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -1997,7 +1979,7 @@ void TriggerLineEditPatternItemEditedCommand::redo()
     mpTreeWidgetTriggers->setCurrentItem(mpItem);
     // mpEditor->slot_triggerSelected(mpItem);
     const int ID = mpItem->data(0, Qt::UserRole).toInt();
-    TTrigger* pT = mpTriggerUnit->getTrigger(ID);
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(ID);
     pBox->blockSignals(true);
     pBox->setCurrentIndex(mTriggerPatternEdit);
     pBox->blockSignals(false);
@@ -2083,7 +2065,7 @@ void TriggerLineSpacerEditedCommand::redo()
     setText(QObject::tr("Edit line spacer"));
 }
 
-TriggerColorFGEditedCommand::TriggerColorFGEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
+TriggerColorFGEditedCommand::TriggerColorFGEditedCommand(Host* pHost, dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent), mpHost(pHost)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -2096,7 +2078,7 @@ void TriggerColorFGEditedCommand::undo()
     mpTreeWidgetTriggers->setCurrentItem(mpItem);
     // mpEditor->slot_triggerSelected(mpItem);
     const int triggerID = mpItem->data(0, Qt::UserRole).toInt();
-    TTrigger* pT = mpTriggerUnit->getTrigger(triggerID);
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(triggerID);
     if (!pT) {
         return;
     }
@@ -2135,7 +2117,7 @@ void TriggerColorFGEditedCommand::redo()
     mpTreeWidgetTriggers->setCurrentItem(mpItem);
     // mpEditor->slot_triggerSelected(mpItem);
     const int triggerID = mpItem->data(0, Qt::UserRole).toInt();
-    TTrigger* pT = mpTriggerUnit->getTrigger(triggerID);
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(triggerID);
     if (!pT) {
         return;
     }
@@ -2169,7 +2151,7 @@ void TriggerColorFGEditedCommand::redo()
     setText(QObject::tr("Edit FG Color"));
 }
 
-TriggerColorBGEditedCommand::TriggerColorBGEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent)
+TriggerColorBGEditedCommand::TriggerColorBGEditedCommand(Host* pHost, dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent) : QUndoCommand(parent), mpHost(pHost)
 {
     mpTriggersMainArea = triggersMainArea;
 }
@@ -2182,7 +2164,7 @@ void TriggerColorBGEditedCommand::undo()
     mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     const int triggerID = mpItem->data(0, Qt::UserRole).toInt();
-    TTrigger* pT = mpTriggerUnit->getTrigger(triggerID);
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(triggerID);
     if (!pT) {
         return;
     }
@@ -2215,7 +2197,7 @@ void TriggerColorBGEditedCommand::redo()
     mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
     const int triggerID = mpItem->data(0, Qt::UserRole).toInt();
-    TTrigger* pT = mpTriggerUnit->getTrigger(triggerID);
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(triggerID);
     if (!pT) {
         return;
     }
