@@ -88,7 +88,7 @@ void DeleteTriggerCommand::redo()
     if (mpItem) {
         const int ID = mpItem->data(0, Qt::UserRole).toInt();
         TTrigger* p = mpHost->getTriggerUnit()->getTrigger(ID);
-        TTrigger* ptr = new TTrigger(p->mName, p->mPatterns, p->getRegexCodePropertyList(), false, mpHost);
+        TTrigger* ptr = new TTrigger(p->mName, p->mPatterns, p->getRegexCodePropertyList(), mpHost);
         ptr->registerTrigger();
         mpItemTrigger = ptr;
         mpEditor->delete_trigger();
@@ -1844,9 +1844,9 @@ void TriggerPerlSlashGOptionEditedCommand::undo()
     }
     mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
-    mpTriggersMainArea->groupBox_perlSlashGOption->blockSignals(true);
-    mpTriggersMainArea->groupBox_perlSlashGOption->setChecked(mPrevPerlSlashGOption);
-    mpTriggersMainArea->groupBox_perlSlashGOption->blockSignals(false);
+    mpTriggersMainArea->checkBox_perlSlashGOption->blockSignals(true);
+    mpTriggersMainArea->checkBox_perlSlashGOption->setChecked(mPrevPerlSlashGOption);
+    mpTriggersMainArea->checkBox_perlSlashGOption->blockSignals(false);
 }
 
 void TriggerPerlSlashGOptionEditedCommand::redo()
@@ -1856,9 +1856,9 @@ void TriggerPerlSlashGOptionEditedCommand::redo()
     }
     mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
-    mpTriggersMainArea->groupBox_perlSlashGOption->blockSignals(true);
-    mpTriggersMainArea->groupBox_perlSlashGOption->setChecked(mPerlSlashGOption);
-    mpTriggersMainArea->groupBox_perlSlashGOption->blockSignals(false);
+    mpTriggersMainArea->checkBox_perlSlashGOption->blockSignals(true);
+    mpTriggersMainArea->checkBox_perlSlashGOption->setChecked(mPerlSlashGOption);
+    mpTriggersMainArea->checkBox_perlSlashGOption->blockSignals(false);
     setText(QObject::tr("Edit Perl Option"));
 }
 
@@ -1874,9 +1874,9 @@ void TriggerGroupFilterEditedCommand::undo()
     }
     mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
-    mpTriggersMainArea->groupBox_filterTrigger->blockSignals(true);
-    mpTriggersMainArea->groupBox_filterTrigger->setChecked(mPrevFilterTrigger);
-    mpTriggersMainArea->groupBox_filterTrigger->blockSignals(false);
+    mpTriggersMainArea->checkBox_filterTrigger->blockSignals(true);
+    mpTriggersMainArea->checkBox_filterTrigger->setChecked(mPrevFilterTrigger);
+    mpTriggersMainArea->checkBox_filterTrigger->blockSignals(false);
 }
 
 void TriggerGroupFilterEditedCommand::redo()
@@ -1886,9 +1886,9 @@ void TriggerGroupFilterEditedCommand::redo()
     }
     mpTreeWidgetTriggers->setCurrentItem(mpItem);
     mpEditor->slot_triggerSelected(mpItem);
-    mpTriggersMainArea->groupBox_filterTrigger->blockSignals(true);
-    mpTriggersMainArea->groupBox_filterTrigger->setChecked(mFilterTrigger);
-    mpTriggersMainArea->groupBox_filterTrigger->blockSignals(false);
+    mpTriggersMainArea->checkBox_filterTrigger->blockSignals(true);
+    mpTriggersMainArea->checkBox_filterTrigger->setChecked(mFilterTrigger);
+    mpTriggersMainArea->checkBox_filterTrigger->blockSignals(false);
     setText(QObject::tr("Edit filter trigger"));
 }
 

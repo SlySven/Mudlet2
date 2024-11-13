@@ -342,8 +342,8 @@ private slots:
     void slot_triggerPlaySoundEdited(bool);
     void slot_triggerPlaySoundFileEdited(const QString &text);
     void slot_triggerColorizerEdited(bool);
-    void slot_triggerPerlSlashGOptionEdited(bool);
-    void slot_triggerGroupFilterEdited(bool);
+    void slot_triggerPerlSlashGOptionEdited(int);
+    void slot_triggerGroupFilterEdited(int);
     void slot_triggerMultiLineEdited(bool);
     void slot_triggerLineMarginEdited(int);
     void slot_triggerLinePatternItemEdited(int);
@@ -497,6 +497,7 @@ private:
 
     void showOrHideRestoreEditorActionsToolbarAction();
     void showOrHideRestoreEditorItemsToolbarAction();
+    void checkForMoreThanOneTriggerItem();
 
     // PLACEMARKER 3/3 save button texts need to be kept in sync
     std::unordered_map<QString, QString> mButtonShortcuts = {
@@ -546,7 +547,7 @@ private:
     EditorViewType mCurrentView = EditorViewType::cmUnknownView;
 
     QScrollArea* mpScrollArea = nullptr;
-    QWidget* HpatternList = nullptr;
+    QWidget* mpWidget_triggerItems = nullptr;
     // this widget holds the errors, trigger patterns, and all other widgets that aren't edbee
     // in it, as a workaround for an extra splitter getting created by Qt below the error msg otherwise
     QWidget *mpNonCodeWidgets = nullptr;
@@ -616,6 +617,11 @@ private:
 
     // profile autosave interval in minutes
     int mAutosaveInterval = 2;
+
+    // The space recorded for the left side for "items" in the trigger area
+    // so as to be able to fit the right side with the extra controls,
+    // determined the first time the area is shrunk down by the user:
+    int mTriggerMainAreaMinimumHeightToShowAll = 0;
 
     // tracks location of the splitter in the trigger editor for each tab
     QByteArray mTriggerEditorSplitterState;
