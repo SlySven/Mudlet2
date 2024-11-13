@@ -2318,21 +2318,13 @@ void TriggerPerlSlashGOptionEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-<<<<<<< Updated upstream
-    mpTreeWidgetTriggers->setCurrentItem(mpItem);
-    mpEditor->slot_triggerSelected(mpItem);
-    mpTriggersMainArea->checkBox_perlSlashGOption->blockSignals(true);
-    mpTriggersMainArea->checkBox_perlSlashGOption->setChecked(mPrevPerlSlashGOption);
-    mpTriggersMainArea->checkBox_perlSlashGOption->blockSignals(false);
-=======
     int id = mpItemTrigger->getID();
     mpEditor->selectTriggerByID(id);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
-    mpTriggersMainArea->groupBox_perlSlashGOption->blockSignals(true);
-    mpTriggersMainArea->groupBox_perlSlashGOption->setChecked(mPrevPerlSlashGOption);
-    mpTriggersMainArea->groupBox_perlSlashGOption->blockSignals(false);
->>>>>>> Stashed changes
+    mpTriggersMainArea->checkBox_perlSlashGOption->blockSignals(true);
+    mpTriggersMainArea->checkBox_perlSlashGOption->setChecked(mPrevPerlSlashGOption);
+    mpTriggersMainArea->checkBox_perlSlashGOption->blockSignals(false);
 }
 
 void TriggerPerlSlashGOptionEditedCommand::redo()
@@ -2340,21 +2332,13 @@ void TriggerPerlSlashGOptionEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-<<<<<<< Updated upstream
-    mpTreeWidgetTriggers->setCurrentItem(mpItem);
-    mpEditor->slot_triggerSelected(mpItem);
-    mpTriggersMainArea->checkBox_perlSlashGOption->blockSignals(true);
-    mpTriggersMainArea->checkBox_perlSlashGOption->setChecked(mPerlSlashGOption);
-    mpTriggersMainArea->checkBox_perlSlashGOption->blockSignals(false);
-=======
     int id = mpItemTrigger->getID();
     mpEditor->selectTriggerByID(id);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
-    mpTriggersMainArea->groupBox_perlSlashGOption->blockSignals(true);
-    mpTriggersMainArea->groupBox_perlSlashGOption->setChecked(mPerlSlashGOption);
-    mpTriggersMainArea->groupBox_perlSlashGOption->blockSignals(false);
->>>>>>> Stashed changes
+    mpTriggersMainArea->checkBox_perlSlashGOption->blockSignals(true);
+    mpTriggersMainArea->checkBox_perlSlashGOption->setChecked(mPerlSlashGOption);
+    mpTriggersMainArea->checkBox_perlSlashGOption->blockSignals(false);
     setText(QObject::tr("Edit Perl Option"));
 }
 
@@ -2368,21 +2352,13 @@ void TriggerGroupFilterEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-<<<<<<< Updated upstream
-    mpTreeWidgetTriggers->setCurrentItem(mpItem);
-    mpEditor->slot_triggerSelected(mpItem);
-    mpTriggersMainArea->checkBox_filterTrigger->blockSignals(true);
-    mpTriggersMainArea->checkBox_filterTrigger->setChecked(mPrevFilterTrigger);
-    mpTriggersMainArea->checkBox_filterTrigger->blockSignals(false);
-=======
     int id = mpItemTrigger->getID();
     mpEditor->selectTriggerByID(id);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
-    mpTriggersMainArea->groupBox_filterTrigger->blockSignals(true);
-    mpTriggersMainArea->groupBox_filterTrigger->setChecked(mPrevFilterTrigger);
-    mpTriggersMainArea->groupBox_filterTrigger->blockSignals(false);
->>>>>>> Stashed changes
+    mpTriggersMainArea->checkBox_filterTrigger->blockSignals(true);
+    mpTriggersMainArea->checkBox_filterTrigger->setChecked(mPrevFilterTrigger);
+    mpTriggersMainArea->checkBox_filterTrigger->blockSignals(false);
 }
 
 void TriggerGroupFilterEditedCommand::redo()
@@ -2390,21 +2366,13 @@ void TriggerGroupFilterEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-<<<<<<< Updated upstream
-    mpTreeWidgetTriggers->setCurrentItem(mpItem);
-    mpEditor->slot_triggerSelected(mpItem);
-    mpTriggersMainArea->checkBox_filterTrigger->blockSignals(true);
-    mpTriggersMainArea->checkBox_filterTrigger->setChecked(mFilterTrigger);
-    mpTriggersMainArea->checkBox_filterTrigger->blockSignals(false);
-=======
     int id = mpItemTrigger->getID();
     mpEditor->selectTriggerByID(id);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
-    mpTriggersMainArea->groupBox_filterTrigger->blockSignals(true);
-    mpTriggersMainArea->groupBox_filterTrigger->setChecked(mFilterTrigger);
-    mpTriggersMainArea->groupBox_filterTrigger->blockSignals(false);
->>>>>>> Stashed changes
+    mpTriggersMainArea->checkBox_filterTrigger->blockSignals(true);
+    mpTriggersMainArea->checkBox_filterTrigger->setChecked(mFilterTrigger);
+    mpTriggersMainArea->checkBox_filterTrigger->blockSignals(false);
     setText(QObject::tr("Edit filter trigger"));
 }
 
