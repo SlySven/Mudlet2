@@ -93,7 +93,6 @@ class TAction;
 class TKey;
 class TConsole;
 class dlgVarsMainArea;
-class AddTriggerCommand;
 
 class dlgTriggerEditor : public QMainWindow, private Ui::trigger_editor
 {
@@ -254,6 +253,12 @@ public:
     void hideSystemMessageArea();
     void showIDLabels(const bool);
     void createUndoView();
+    void selectTriggerByID(int id);
+    void selectTimerByID(int id);
+    void selectAliasByID(int id);
+    void selectScriptByID(int id);
+    void selectActionByID(int id);
+    void selectKeyByID(int id);
 public slots:
     void slot_toggleHiddenVariables(bool);
     void slot_hideVariable(bool);
@@ -390,12 +395,6 @@ private:
     void writeSettings();
     void timerEvent(QTimerEvent *event) override;
 
-    void selectTriggerByID(int id);
-    void selectTimerByID(int id);
-    void selectAliasByID(int id);
-    void selectScriptByID(int id);
-    void selectActionByID(int id);
-    void selectKeyByID(int id);
 
     void clearTriggerForm();
     void clearTimerForm();
@@ -583,8 +582,19 @@ private:
     QAction* mSaveItem = nullptr;
     QAction* undoAction = nullptr;
     QAction* redoAction = nullptr;
+    QMenu* undoStackMenu = nullptr;
+    QMenu* redoStackMenu = nullptr;
+    void undoStackContextMenu();
+    void redoStackContextMenu();
+    void slot_undoAction(int idx);
+    void slot_redoAction(int idx);
+    void slot_undo();
+    void slot_redo();
     QUndoStack* undoStack = nullptr;
     QUndoView* undoView = nullptr;
+    int undoIndex = 0;
+    int redoIndex = 0;
+    QList<QAction*> undoActions;
     SearchOptions mSearchOptions = SearchOptionNone;
 
     // This has a menu which the following QActions are inserted into:
@@ -673,6 +683,10 @@ private:
     QList<int> mPrevLineSpacer;
     QColor mPrevColorTriggerFgColor;
     QColor mPrevColorTriggerBgColor;
+    int mPrevColorTriggerFgAnsi;
+    int mPrevColorTriggerBgAnsi;
+    int mColorTriggerFgAnsi;
+    int mColorTriggerBgAnsi;
     QString mPrevAliasName;
     QString mPrevAliasCommand;
     QString mPrevAliasPattern;

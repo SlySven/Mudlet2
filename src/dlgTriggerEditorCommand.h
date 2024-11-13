@@ -1,14 +1,7 @@
 #ifndef MUDLET_DLGTRIGGERSCOMMANDS_H
 #define MUDLET_DLGTRIGGERSCOMMANDS_H
 
-//#include "ActionUnit.h"
-//#include "AliasUnit.h"
-//#include "KeyUnit.h"
-//#include "ScriptUnit.h"
 #include "TTreeWidget.h"
-//#include "TimerUnit.h"
-//#include "TriggerUnit.h"
-//#include "VarUnit.h"
 #include "dlgTriggerEditor.h"
 #include <QPointer>
 #include <QListWidgetItem>
@@ -22,22 +15,42 @@ class dlgScriptsMainArea;
 class dlgKeysMainArea;
 class dlgActionMainArea;
 class VarUnit;
+class XMLImport;
 
 class AddTriggerCommand : public QUndoCommand
 {
 public:
-    AddTriggerCommand(QTreeWidgetItem* pItem, TTreeWidget* treeWidgetTriggers, bool isFolder, QUndoCommand* parent = nullptr);
+    AddTriggerCommand(Host* pHost, TTreeWidget* treeWidgetTriggers, bool isFolder, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggerEditor* mpEditor = nullptr;
+    QTreeWidgetItem* mpItemDup = nullptr;
+    TTrigger* mpItemTrigger;
 
 private:
     QPointer<Host> mpHost;
-    QTreeWidgetItem* mpItem;
-    QTreeWidgetItem* mpParent;
+    QTreeWidgetItem* mpItem = nullptr;    
+    QTreeWidgetItem* mpParent = nullptr;
+    TTreeWidget* mpTreeWidgetTriggers;
+    bool mIsFolder;
+};
+
+class PasteTriggerCommand : public QUndoCommand
+{
+public:
+    PasteTriggerCommand(Host* pHost, TTreeWidget* treeWidgetTriggers, QUndoCommand* parent = nullptr);
+    void undo() override;
+    void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
+    QString xml;
+    int mImportedItemID;
+
+private:
+    QPointer<Host> mpHost;
+    QTreeWidgetItem* mpItem = nullptr;
+    QTreeWidgetItem* mpParent = nullptr;
     TTreeWidget* mpTreeWidgetTriggers;
     TTrigger* mpItemTrigger;
-    bool mIsFolder;
 };
 
 class DeleteTriggerCommand : public QUndoCommand
@@ -97,17 +110,35 @@ private:
 class AddAliasCommand : public QUndoCommand
 {
 public:
-    AddAliasCommand(QTreeWidgetItem* pItem,TTreeWidget* treeWidgetTriggers, bool isFolder, QUndoCommand* parent = nullptr);
+    AddAliasCommand(Host* pHost, TTreeWidget* treeWidgetTriggers, bool isFolder, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggerEditor* mpEditor = nullptr;
+    TAlias* mpItemAlias;
 
 private:
-    QTreeWidgetItem* mpItem;
+    QPointer<Host> mpHost;
+    QTreeWidgetItem* mpItem = nullptr;
     QTreeWidgetItem* mpParent;
     TTreeWidget* mpTreeWidgetAliases;
-    TTrigger* mpItemTrigger;
     bool mIsFolder;
+};
+
+class PasteAliasCommand : public QUndoCommand
+{
+public:
+    PasteAliasCommand(Host* pHost, TTreeWidget* treeWidgetAliases, QUndoCommand* parent = nullptr);
+    void undo() override;
+    void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
+    TAlias* mpItemAlias;
+    int mImportedItemID;
+
+private:
+    QPointer<Host> mpHost;
+    QTreeWidgetItem* mpItem = nullptr;
+    QTreeWidgetItem* mpParent = nullptr;
+    TTreeWidget* mpTreeWidgetAliases;
 };
 
 class DeleteAliasCommand : public QUndoCommand
@@ -118,12 +149,12 @@ public:
     void redo() override;
     dlgTriggerEditor* mpEditor = nullptr;
     QPointer<Host> mpHost;
+    TAlias* mpItemAlias;
 
 private:
     QTreeWidgetItem* mpItem;
     QTreeWidgetItem* mpParent;
     TTreeWidget* mpTreeWidgetAliases;
-    TAlias* mpItemAlias;
 };
 
 class MoveAliasCommand : public QUndoCommand, QTreeWidget
@@ -146,7 +177,7 @@ public:
     QTreeWidgetItem* mpParentItem;
     QTreeWidgetItem* mpPrevParentItem;
     QTreeWidgetItem* mpItem;
-    TTrigger* mpItemAlias;
+    TAlias* mpItemAlias;
     TTreeWidget* mpTreeWidgetAliases;
     int mChildID;
     int mOldParentID;
@@ -166,12 +197,15 @@ private:
 class AliasNameTextEditedCommand : public QUndoCommand
 {
 public:
-    AliasNameTextEditedCommand(dlgAliasMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
+    AliasNameTextEditedCommand(Host* pHost, dlgAliasMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
+    QPointer<Host> mpHost;
     dlgAliasMainArea* mpAliasMainArea = nullptr;
     TTreeWidget* mpTreeWidgetAliases;
     QTreeWidgetItem* mpItem;
+    TAlias* mpItemAlias;
     QString mPrevAliasName;
     QString mAliasName;
 };
@@ -179,12 +213,15 @@ public:
 class AliasCommandTextEditedCommand : public QUndoCommand
 {
 public:
-    AliasCommandTextEditedCommand(dlgAliasMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
+    AliasCommandTextEditedCommand(Host* pHost, dlgAliasMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
+    QPointer<Host> mpHost;
     dlgAliasMainArea* mpAliasMainArea = nullptr;
     TTreeWidget* mpTreeWidgetAliases;
     QTreeWidgetItem* mpItem;
+    TAlias* mpItemAlias;
     QString mPrevAliasCommand;
     QString mAliasCommand;
 };
@@ -192,12 +229,15 @@ public:
 class AliasPatternTextEditedCommand : public QUndoCommand
 {
 public:
-    AliasPatternTextEditedCommand(dlgAliasMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
+    AliasPatternTextEditedCommand(Host* pHost, dlgAliasMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
+    QPointer<Host> mpHost;
     dlgAliasMainArea* mpAliasMainArea = nullptr;
     TTreeWidget* mpTreeWidgetAliases;
     QTreeWidgetItem* mpItem;
+    TAlias* mpItemAlias;
     QString mPrevAliasPattern;
     QString mAliasPattern;
 };
@@ -205,18 +245,35 @@ public:
 class AddTimerCommand : public QUndoCommand
 {
 public:
-    AddTimerCommand(QTreeWidgetItem* pItem, TTreeWidget* treeWidgetTriggers, bool isFolder, QUndoCommand* parent = nullptr);
+    AddTimerCommand(Host* pHost, TTreeWidget* treeWidgetTriggers, bool isFolder, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggerEditor* mpEditor = nullptr;
+    TTimer* mpItemTimer;
 
 private:
-    QTreeWidgetItem* mpItem;
+    QTreeWidgetItem* mpItem = nullptr;
     QTreeWidgetItem* mpParent;
     TTreeWidget* mpTreeWidgetTimers;
-    QPointer<Host> mpHost;
-    TTrigger* mpItemTrigger;
+    QPointer<Host> mpHost;    
     bool mIsFolder;
+};
+
+class PasteTimerCommand : public QUndoCommand
+{
+public:
+    PasteTimerCommand(Host* pHost, TTreeWidget* treeWidgetTimers, QUndoCommand* parent = nullptr);
+    void undo() override;
+    void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
+    TTimer* mpItemTimer;
+    int mImportedItemID;
+
+private:
+    QPointer<Host> mpHost;
+    QTreeWidgetItem* mpItem = nullptr;
+    QTreeWidgetItem* mpParent = nullptr;
+    TTreeWidget* mpTreeWidgetTimers;
 };
 
 class DeleteTimerCommand : public QUndoCommand
@@ -227,12 +284,12 @@ public:
     void redo() override;
     dlgTriggerEditor* mpEditor;
     QPointer<Host> mpHost;
+    TTimer* mpItemTimer;
 
 private:
     QTreeWidgetItem* mpItem;
     QTreeWidgetItem* mpParent;
     TTreeWidget* mpTreeWidgetTimers;
-    TTimer* mpItemTimer;
 };
 
 class MoveTimerCommand : public QUndoCommand, QTreeWidget
@@ -275,12 +332,15 @@ private:
 class TimerNameTextEditedCommand : public QUndoCommand
 {
 public:
-    TimerNameTextEditedCommand(dlgTimersMainArea* timersMainArea, QUndoCommand* parent = nullptr);
+    TimerNameTextEditedCommand(Host* pHost, dlgTimersMainArea* timersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
+    QPointer<Host> mpHost;
     dlgTimersMainArea* mpTimersMainArea = nullptr;
     TTreeWidget* mpTreeWidgetTimers;
-    QTreeWidgetItem* mpItem;
+    QTreeWidgetItem* mpItem = nullptr;
+    TTimer* mpItemTimer;
     QString mPrevTimerName;
     QString mTimerName;
 };
@@ -288,12 +348,15 @@ public:
 class TimerCommandTextEditedCommand : public QUndoCommand
 {
 public:
-    TimerCommandTextEditedCommand(dlgTimersMainArea* timersMainArea, QUndoCommand* parent = nullptr);
+    TimerCommandTextEditedCommand(Host* pHost, dlgTimersMainArea* timersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
+    QPointer<Host> mpHost;
     dlgTimersMainArea* mpTimersMainArea = nullptr;
     TTreeWidget* mpTreeWidgetTimers;
-    QTreeWidgetItem* mpItem;
+    QTreeWidgetItem* mpItem = nullptr;
+    TTimer* mpItemTimer;
     QString mPrevTimerCommand;
     QString mTimerCommand;
 };
@@ -301,12 +364,15 @@ public:
 class TimerHoursTextEditedCommand : public QUndoCommand
 {
 public:
-    TimerHoursTextEditedCommand(dlgTimersMainArea* timersMainArea, QUndoCommand* parent = nullptr);
+    TimerHoursTextEditedCommand(Host* pHost, dlgTimersMainArea* timersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
+    QPointer<Host> mpHost;
     dlgTimersMainArea* mpTimersMainArea = nullptr;
     TTreeWidget* mpTreeWidgetTimers;
-    QTreeWidgetItem* mpItem;
+    QTreeWidgetItem* mpItem = nullptr;
+    TTimer* mpItemTimer;
     int mPrevTimerHours;
     int mTimerHours;
 };
@@ -314,12 +380,15 @@ public:
 class TimerMinutesTextEditedCommand : public QUndoCommand
 {
 public:
-    TimerMinutesTextEditedCommand(dlgTimersMainArea* timersMainArea, QUndoCommand* parent = nullptr);
+    TimerMinutesTextEditedCommand(Host* pHost, dlgTimersMainArea* timersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
+    QPointer<Host> mpHost;
     dlgTimersMainArea* mpTimersMainArea = nullptr;
     TTreeWidget* mpTreeWidgetTimers;
-    QTreeWidgetItem* mpItem;
+    QTreeWidgetItem* mpItem = nullptr;
+    TTimer* mpItemTimer;
     int mPrevTimerMinutes;
     int mTimerMinutes;
 };
@@ -327,12 +396,15 @@ public:
 class TimerSecondsTextEditedCommand : public QUndoCommand
 {
 public:
-    TimerSecondsTextEditedCommand(dlgTimersMainArea* timersMainArea, QUndoCommand* parent = nullptr);
+    TimerSecondsTextEditedCommand(Host* pHost, dlgTimersMainArea* timersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
+    QPointer<Host> mpHost;
     dlgTimersMainArea* mpTimersMainArea = nullptr;
     TTreeWidget* mpTreeWidgetTimers;
-    QTreeWidgetItem* mpItem;
+    QTreeWidgetItem* mpItem = nullptr;
+    TTimer* mpItemTimer;
     int mPrevTimerSeconds;
     int mTimerSeconds;
 };
@@ -340,12 +412,15 @@ public:
 class TimerMilliSecondsTextEditedCommand : public QUndoCommand
 {
 public:
-    TimerMilliSecondsTextEditedCommand(dlgTimersMainArea* timersMainArea, QUndoCommand* parent = nullptr);
+    TimerMilliSecondsTextEditedCommand(Host* pHost, dlgTimersMainArea* timersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
+    QPointer<Host> mpHost;
     dlgTimersMainArea* mpTimersMainArea = nullptr;
     TTreeWidget* mpTreeWidgetTimers;
-    QTreeWidgetItem* mpItem;
+    QTreeWidgetItem* mpItem = nullptr;
+    TTimer* mpItemTimer;
     int mPrevTimerMsecs;
     int mTimerMsecs;
 };
@@ -353,17 +428,35 @@ public:
 class AddScriptCommand : public QUndoCommand
 {
 public:
-    AddScriptCommand(QTreeWidgetItem* pItem, TTreeWidget* treeWidgetScripts, bool isFolder, QUndoCommand* parent = nullptr);
+    AddScriptCommand(Host* pHost, TTreeWidget* treeWidgetScripts, bool isFolder, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggerEditor* mpEditor = nullptr;
+    TScript* mpItemScript;
 
 private:
-    QTreeWidgetItem* mpItem;
+    QPointer<Host> mpHost;
+    QTreeWidgetItem* mpItem = nullptr;
     QTreeWidgetItem* mpParent;
     TTreeWidget* mpTreeWidgetScripts;
-    TTrigger* mpItemTrigger;
     bool mIsFolder;
+};
+
+class PasteScriptCommand : public QUndoCommand
+{
+public:
+    PasteScriptCommand(Host* pHost, TTreeWidget* treeWidgetScripts, QUndoCommand* parent = nullptr);
+    void undo() override;
+    void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
+    int mImportedItemID;
+
+private:
+    QPointer<Host> mpHost;
+    QTreeWidgetItem* mpItem = nullptr;
+    QTreeWidgetItem* mpParent = nullptr;
+    TTreeWidget* mpTreeWidgetScripts;
+    TScript* mpItemScript;
 };
 
 class DeleteScriptCommand : public QUndoCommand
@@ -422,12 +515,15 @@ private:
 class ScriptNameTextEditedCommand : public QUndoCommand
 {
 public:
-    ScriptNameTextEditedCommand(dlgScriptsMainArea* scriptsMainArea, QUndoCommand* parent = nullptr);
+    ScriptNameTextEditedCommand(Host* pHost, dlgScriptsMainArea* scriptsMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
     dlgScriptsMainArea* mpScriptsMainArea = nullptr;
+    QPointer<Host> mpHost;
     TTreeWidget* mpTreeWidgetScripts;
     QTreeWidgetItem* mpItem;
+    TScript* mpItemScript;
     QString mPrevScriptName;
     QString mScriptName;
 };
@@ -435,47 +531,69 @@ public:
 class ScriptAddHandlerCommand : public QUndoCommand
 {
 public:
-    ScriptAddHandlerCommand(dlgScriptsMainArea* scriptsMainArea, QUndoCommand* parent = nullptr);
+    ScriptAddHandlerCommand(Host* pHost, dlgScriptsMainArea* scriptsMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgScriptsMainArea* mpScriptsMainArea = nullptr;
+    QPointer<Host> mpHost;
     TTreeWidget* mpTreeWidgetScripts;
     QTreeWidgetItem* mpItem;
     QString mPrevScriptEventhandler;
     QString mScriptEventhandler;
     QListWidgetItem* mpWidgetItem;
+    TScript* mpItemScript;
     int mRow;
 };
 
 class ScriptRemoveHandlerCommand : public QUndoCommand
 {
 public:
-    ScriptRemoveHandlerCommand(dlgScriptsMainArea* scriptsMainArea, QUndoCommand* parent = nullptr);
+    ScriptRemoveHandlerCommand(Host* pHost, dlgScriptsMainArea* scriptsMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgScriptsMainArea* mpScriptsMainArea = nullptr;
+    QPointer<Host> mpHost;
     TTreeWidget* mpTreeWidgetScripts;
     QTreeWidgetItem* mpItem;
     QString mPrevScriptEventhandler;
     QString mScriptEventhandler;
     QListWidgetItem* mpWidgetItem;
+    TScript* mpItemScript;
     int mRow;
 };
 
 class AddKeyCommand : public QUndoCommand
 {
 public:
-    AddKeyCommand(QTreeWidgetItem* pItem, TTreeWidget* treeWidgetKeys, bool isFolder, QUndoCommand* parent = nullptr);
+    AddKeyCommand(Host* pHost, TTreeWidget* treeWidgetKeys, bool isFolder, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggerEditor* mpEditor = nullptr;
+    TKey* mpItemKey;
 
 private:
-    QTreeWidgetItem* mpItem;
+    QTreeWidgetItem* mpItem = nullptr;
     QTreeWidgetItem* mpParent;
     TTreeWidget* mpTreeWidgetKeys;
-    TTrigger* mpItemTrigger;
+    QPointer<Host> mpHost;
     bool mIsFolder;
+};
+
+class PasteKeyCommand : public QUndoCommand
+{
+public:
+    PasteKeyCommand(Host* pHost, TTreeWidget* treeWidgetKeys, QUndoCommand* parent = nullptr);
+    void undo() override;
+    void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
+    TKey* mpItemKey;
+    int mImportedItemID;
+
+private:
+    QPointer<Host> mpHost;
+    QTreeWidgetItem* mpItem = nullptr;
+    QTreeWidgetItem* mpParent = nullptr;
+    TTreeWidget* mpTreeWidgetKeys;
 };
 
 class DeleteKeyCommand : public QUndoCommand
@@ -485,13 +603,13 @@ public:
     void undo() override;
     void redo() override;
     dlgTriggerEditor* mpEditor = nullptr;
+    TKey* mpItemKey;
 
 private:
     QTreeWidgetItem* mpItem;
     QTreeWidgetItem* mpParent;
     TTreeWidget* mpTreeWidgetKeys;
     QPointer<Host> mpHost;
-    TKey* mpItemKey;
 };
 
 class MoveKeyCommand : public QUndoCommand, QTreeWidget
@@ -534,12 +652,15 @@ private:
 class KeyNameTextEditedCommand : public QUndoCommand
 {
 public:
-    KeyNameTextEditedCommand(dlgKeysMainArea* keysMainArea, QUndoCommand* parent = nullptr);
+    KeyNameTextEditedCommand(Host* pHost, dlgKeysMainArea* keysMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
     dlgKeysMainArea* mpKeysMainArea = nullptr;
+    QPointer<Host> mpHost;
     TTreeWidget* mpTreeWidgetKeys;
     QTreeWidgetItem* mpItem;
+    TKey* mpItemKey;
     QString mPrevKeyName;
     QString mKeyName;
 };
@@ -547,12 +668,15 @@ public:
 class KeyCommandTextEditedCommand : public QUndoCommand
 {
 public:
-    KeyCommandTextEditedCommand(dlgKeysMainArea* keysMainArea, QUndoCommand* parent = nullptr);
+    KeyCommandTextEditedCommand(Host* pHost, dlgKeysMainArea* keysMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
     dlgKeysMainArea* mpKeysMainArea = nullptr;
     TTreeWidget* mpTreeWidgetKeys;
     QTreeWidgetItem* mpItem;
+    QPointer<Host> mpHost;
+    TKey* mpItemKey;
     QString mPrevKeyCommand;
     QString mKeyCommand;
 };
@@ -563,10 +687,12 @@ public:
     KeyGrabTextEditedCommand(Host* pHost, dlgKeysMainArea* keysMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
     dlgKeysMainArea* mpKeysMainArea = nullptr;
     TTreeWidget* mpTreeWidgetKeys;
     QTreeWidgetItem* mpItem;
     QPointer<Host> mpHost;
+    TKey* mpItemKey;
     Qt::Key mKey;
     Qt::KeyboardModifiers mModifier;
     Qt::Key mPrevKey;
@@ -578,17 +704,35 @@ public:
 class AddActionCommand : public QUndoCommand
 {
 public:
-    AddActionCommand(QTreeWidgetItem* pItem, TTreeWidget* treeWidgetActions, bool isFolder, QUndoCommand* parent = nullptr);
+    AddActionCommand(Host* pHost, TTreeWidget* treeWidgetActions, bool isFolder, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggerEditor* mpEditor = nullptr;
+    TAction* mpItemAction;
 
 private:
-    QTreeWidgetItem* mpItem;
+    QTreeWidgetItem* mpItem = nullptr;
     QTreeWidgetItem* mpParent;
-    TTreeWidget* mpTreeWidgetActions;
-    TTrigger* mpItemTrigger;
+    TTreeWidget* mpTreeWidgetActions;    
+    QPointer<Host> mpHost;
     bool mIsFolder;
+};
+
+class PasteActionCommand : public QUndoCommand
+{
+public:
+    PasteActionCommand(Host* pHost, TTreeWidget* treeWidgetActions, QUndoCommand* parent = nullptr);
+    void undo() override;
+    void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
+    TAction* mpItemAction;
+    int mImportedItemID;
+
+private:
+    QPointer<Host> mpHost;
+    QTreeWidgetItem* mpItem = nullptr;
+    QTreeWidgetItem* mpParent = nullptr;
+    TTreeWidget* mpTreeWidgetActions;
 };
 
 class DeleteActionCommand : public QUndoCommand
@@ -646,12 +790,15 @@ private:
 class ActionNameTextEditedCommand : public QUndoCommand
 {
 public:
-    ActionNameTextEditedCommand(dlgActionMainArea* actionsMainArea, QUndoCommand* parent = nullptr);
+    ActionNameTextEditedCommand(Host* pHost, dlgActionMainArea* actionsMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
     dlgActionMainArea* mpActionsMainArea = nullptr;
     TTreeWidget* mpTreeWidgetActions;
-    QTreeWidgetItem* mpItem;
+    QTreeWidgetItem* mpItem = nullptr;
+    QPointer<Host> mpHost;
+    TAction* mpItemAction;
     QString mPrevActionName;
     QString mActionName;
 };
@@ -659,12 +806,15 @@ public:
 class ActionButtonRotationEditedCommand : public QUndoCommand
 {
 public:
-    ActionButtonRotationEditedCommand(dlgActionMainArea* actionsMainArea, QUndoCommand* parent = nullptr);
+    ActionButtonRotationEditedCommand(Host* pHost, dlgActionMainArea* actionsMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
     dlgActionMainArea* mpActionsMainArea = nullptr;
     TTreeWidget* mpTreeWidgetActions;
     QTreeWidgetItem* mpItem;
+    QPointer<Host> mpHost;
+    TAction* mpItemAction;
     int mPrevRotation;
     int mRotation;
 };
@@ -672,13 +822,15 @@ public:
 class ActionButtonCheckboxEditedCommand : public QUndoCommand
 {
 public:
-    ActionButtonCheckboxEditedCommand(dlgActionMainArea* actionsMainArea, QUndoCommand* parent = nullptr);
+    ActionButtonCheckboxEditedCommand(Host* pHost, dlgActionMainArea* actionsMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggerEditor* mpEditor = nullptr;
     dlgActionMainArea* mpActionsMainArea = nullptr;
     TTreeWidget* mpTreeWidgetActions;
     QTreeWidgetItem* mpItem;
+    QPointer<Host> mpHost;
+    TAction* mpItemAction;
     bool mPrevIsPushDown;
     bool mIsPushDown;
 };
@@ -686,12 +838,15 @@ public:
 class ActionCommandDownTextEditedCommand : public QUndoCommand
 {
 public:
-    ActionCommandDownTextEditedCommand(dlgActionMainArea* actionsMainArea, QUndoCommand* parent = nullptr);
+    ActionCommandDownTextEditedCommand(Host* pHost, dlgActionMainArea* actionsMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
     dlgActionMainArea* mpActionsMainArea = nullptr;
     TTreeWidget* mpTreeWidgetActions;
     QTreeWidgetItem* mpItem;
+    QPointer<Host> mpHost;
+    TAction* mpItemAction;
     QString mPrevCommandDown;
     QString mCommandDown;
 };
@@ -699,12 +854,15 @@ public:
 class ActionCommandUpTextEditedCommand : public QUndoCommand
 {
 public:
-    ActionCommandUpTextEditedCommand(dlgActionMainArea* actionsMainArea, QUndoCommand* parent = nullptr);
+    ActionCommandUpTextEditedCommand(Host* pHost, dlgActionMainArea* actionsMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
     dlgActionMainArea* mpActionsMainArea = nullptr;
     TTreeWidget* mpTreeWidgetActions;
     QTreeWidgetItem* mpItem;
+    QPointer<Host> mpHost;
+    TAction* mpItemAction;
     QString mPrevCommandUp;
     QString mCommandUp;
 };
@@ -712,14 +870,17 @@ public:
 class ActionCssTextEditedCommand : public QUndoCommand
 {
 public:
-    ActionCssTextEditedCommand(dlgActionMainArea* actionsMainArea, QUndoCommand* parent = nullptr);
+    ActionCssTextEditedCommand(Host* pHost, dlgActionMainArea* actionsMainArea, QUndoCommand* parent = nullptr);
     int id() const override;
     bool mergeWith(const QUndoCommand *command) override;
     void undo() override;
     void redo() override;
+    dlgTriggerEditor* mpEditor = nullptr;
     dlgActionMainArea* mpActionsMainArea = nullptr;
     TTreeWidget* mpTreeWidgetActions;
     QTreeWidgetItem* mpItem;
+    QPointer<Host> mpHost;
+    TAction* mpItemAction;
     QString mPrevActionCss;
     QString mActionCss;
 };
@@ -727,16 +888,17 @@ public:
 class AddVarCommand : public QUndoCommand
 {
 public:
-    AddVarCommand(QTreeWidgetItem* pItem, TTreeWidget* treeWidgetVariables, bool isFolder, QUndoCommand* parent = nullptr);
+    AddVarCommand(Host* pHost, TTreeWidget* treeWidgetVariables, bool isFolder, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggerEditor* mpEditor = nullptr;
+    TVar* mpItemVar;
 
 private:
-    QTreeWidgetItem* mpItem;
+    QTreeWidgetItem* mpItem = nullptr;
     QTreeWidgetItem* mpParent;
     TTreeWidget* mpTreeWidgetVariables;
-    TTrigger* mpItemTrigger;
+    QPointer<Host> mpHost;
     bool mIsFolder;
 };
 
@@ -778,13 +940,15 @@ private:
 class TriggerNameTextEditedCommand : public QUndoCommand
 {
 public:
-    TriggerNameTextEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
+    TriggerNameTextEditedCommand(Host* pHost, dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggersMainArea* mpTriggersMainArea = nullptr;
+    QPointer<Host> mpHost;
     dlgTriggerEditor* mpEditor = nullptr;
     QTreeWidgetItem* mpItem;
     TTreeWidget* mpTreeWidgetTriggers;
+    TTrigger* mpItemTrigger;
     QString mPrevLineEditTriggerName;
     QString mLineEditTriggerName;
 };
@@ -792,13 +956,15 @@ public:
 class TriggerCommandTextEditedCommand : public QUndoCommand
 {
 public:
-    TriggerCommandTextEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
+    TriggerCommandTextEditedCommand(Host* pHost, dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggersMainArea* mpTriggersMainArea = nullptr;
     dlgTriggerEditor* mpEditor = nullptr;
     QTreeWidgetItem* mpItem;
+    TTrigger* mpItemTrigger;
     TTreeWidget* mpTreeWidgetTriggers;
+    QPointer<Host> mpHost;
     QString mPrevLineEditTriggerCommand;
     QString mLineEditTriggerCommand;
 };
@@ -806,13 +972,15 @@ public:
 class TriggerFireLengthEditedCommand : public QUndoCommand
 {
 public:
-    TriggerFireLengthEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
+    TriggerFireLengthEditedCommand(Host* pHost, dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggersMainArea* mpTriggersMainArea = nullptr;
     dlgTriggerEditor* mpEditor = nullptr;
     QTreeWidgetItem* mpItem;
+    TTrigger* mpItemTrigger;
     TTreeWidget* mpTreeWidgetTriggers;
+    QPointer<Host> mpHost;
     int mPrevFireLength;
     int mFireLength;
 };
@@ -820,13 +988,15 @@ public:
 class TriggerPlaySoundEditedCommand : public QUndoCommand
 {
 public:
-    TriggerPlaySoundEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
+    TriggerPlaySoundEditedCommand(Host* pHost, dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggersMainArea* mpTriggersMainArea = nullptr;
     dlgTriggerEditor* mpEditor = nullptr;
     QTreeWidgetItem* mpItem;
+    TTrigger* mpItemTrigger;
     TTreeWidget* mpTreeWidgetTriggers;
+    QPointer<Host> mpHost;
     bool mPrevGroupBoxSoundTrigger;
     bool mGroupBoxSoundTrigger;
 };
@@ -834,13 +1004,15 @@ public:
 class TriggerPlaySoundFileEditedCommand : public QUndoCommand
 {
 public:
-    TriggerPlaySoundFileEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
+    TriggerPlaySoundFileEditedCommand(Host* pHost, dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggersMainArea* mpTriggersMainArea = nullptr;
     dlgTriggerEditor* mpEditor = nullptr;
     QTreeWidgetItem* mpItem;
     TTreeWidget* mpTreeWidgetTriggers;
+    QPointer<Host> mpHost;
+    TTrigger* mpItemTrigger;
     QString mPrevLineEditSoundFile;
     QString mLineEditSoundFile;
 };
@@ -848,13 +1020,15 @@ public:
 class TriggerColorizerEditedCommand : public QUndoCommand
 {
 public:
-    TriggerColorizerEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
+    TriggerColorizerEditedCommand(Host* pHost, dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggersMainArea* mpTriggersMainArea = nullptr;
     dlgTriggerEditor* mpEditor = nullptr;
     QTreeWidgetItem* mpItem;
     TTreeWidget* mpTreeWidgetTriggers;
+    QPointer<Host> mpHost;
+    TTrigger* mpItemTrigger;
     bool mPrevBoxTriggerColorizer;
     bool mBoxTriggerColorizer;
 };
@@ -862,13 +1036,15 @@ public:
 class TriggerColorizerBgColorEditedCommand : public QUndoCommand
 {
 public:
-    TriggerColorizerBgColorEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
+    TriggerColorizerBgColorEditedCommand(Host* pHost, dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggersMainArea* mpTriggersMainArea = nullptr;
     dlgTriggerEditor* mpEditor = nullptr;
     QTreeWidgetItem* mpItem;
     TTreeWidget* mpTreeWidgetTriggers;
+    QPointer<Host> mpHost;
+    TTrigger* mpItemTrigger;
     QString mPrevbgColor;
     QString mBgColor;
 };
@@ -876,13 +1052,15 @@ public:
 class TriggerColorizerFgColorEditedCommand : public QUndoCommand
 {
 public:
-    TriggerColorizerFgColorEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
+    TriggerColorizerFgColorEditedCommand(Host* pHost, dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggersMainArea* mpTriggersMainArea = nullptr;
     dlgTriggerEditor* mpEditor = nullptr;
     QTreeWidgetItem* mpItem;
     TTreeWidget* mpTreeWidgetTriggers;
+    QPointer<Host> mpHost;
+    TTrigger* mpItemTrigger;
     QString mPrevfgColor;
     QString mFgColor;
 };
@@ -890,13 +1068,15 @@ public:
 class TriggerPerlSlashGOptionEditedCommand : public QUndoCommand
 {
 public:
-    TriggerPerlSlashGOptionEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
+    TriggerPerlSlashGOptionEditedCommand(Host* pHost, dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggersMainArea* mpTriggersMainArea = nullptr;
     dlgTriggerEditor* mpEditor = nullptr;
     QTreeWidgetItem* mpItem;
     TTreeWidget* mpTreeWidgetTriggers;
+    QPointer<Host> mpHost;
+    TTrigger* mpItemTrigger;
     bool mPrevPerlSlashGOption;
     bool mPerlSlashGOption;
 };
@@ -904,13 +1084,15 @@ public:
 class TriggerGroupFilterEditedCommand : public QUndoCommand
 {
 public:
-    TriggerGroupFilterEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
+    TriggerGroupFilterEditedCommand(Host* pHost, dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggersMainArea* mpTriggersMainArea = nullptr;
     dlgTriggerEditor* mpEditor = nullptr;
     QTreeWidgetItem* mpItem;
     TTreeWidget* mpTreeWidgetTriggers;
+    QPointer<Host> mpHost;
+    TTrigger* mpItemTrigger;
     bool mPrevFilterTrigger;
     bool mFilterTrigger;
 };
@@ -918,13 +1100,15 @@ public:
 class TriggerMultiLineEditedCommand : public QUndoCommand
 {
 public:
-    TriggerMultiLineEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
+    TriggerMultiLineEditedCommand(Host* pHost, dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggersMainArea* mpTriggersMainArea = nullptr;
     dlgTriggerEditor* mpEditor = nullptr;
     QTreeWidgetItem* mpItem;
     TTreeWidget* mpTreeWidgetTriggers;
+    QPointer<Host> mpHost;
+    TTrigger* mpItemTrigger;
     bool mPrevMultiLineTrigger;
     bool mMultiLineTrigger;
 };
@@ -932,13 +1116,15 @@ public:
 class TriggerLineMarginEditedCommand : public QUndoCommand
 {
 public:
-    TriggerLineMarginEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
+    TriggerLineMarginEditedCommand(Host* pHost, dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggersMainArea* mpTriggersMainArea = nullptr;
     dlgTriggerEditor* mpEditor = nullptr;
     QTreeWidgetItem* mpItem;
     TTreeWidget* mpTreeWidgetTriggers;
+    QPointer<Host> mpHost;
+    TTrigger* mpItemTrigger;
     int mPrevLineMargin;
     int mLineMargin;
 };
@@ -952,10 +1138,12 @@ public:
     dlgTriggersMainArea* mpTriggersMainArea = nullptr;
     dlgTriggerPatternEdit* mpPatternItem;
     dlgTriggerEditor* mpEditor = nullptr;
-    QTreeWidgetItem* mpItem;
+    QTreeWidgetItem* mpItem = nullptr;
+    QScrollArea* mpScrollArea = nullptr;
     QComboBox* pBox;
     QComboBox* pBoxTemp = nullptr;
     TTreeWidget* mpTreeWidgetTriggers;
+    TTrigger* mpItemTrigger;
     int mPrevTriggerPatternEdit;
     int mTriggerPatternEdit;
     int mRow;
@@ -966,15 +1154,18 @@ private:
 class TriggerLineEditPatternEditedCommand : public QUndoCommand
 {
 public:
-    TriggerLineEditPatternEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
+    TriggerLineEditPatternEditedCommand(Host* pHost, dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggersMainArea* mpTriggersMainArea = nullptr;
     dlgTriggerEditor* mpEditor = nullptr;
+    QPointer<Host> mpHost;
     dlgTriggerPatternEdit* mpTriggerPattern;
     QList<dlgTriggerPatternEdit*> mpTriggerPatternEdit;
     QTreeWidgetItem* mpItem;
     TTreeWidget* mpTreeWidgetTriggers;
+    TTrigger* mpItemTrigger;
+    QModelIndex mItemIndex;
     QString mPrevLineEditTriggerPattern;
     QString mLineEditTriggerPattern;
     int mRow;
@@ -983,14 +1174,16 @@ public:
 class TriggerLineSpacerEditedCommand : public QUndoCommand
 {
 public:
-    TriggerLineSpacerEditedCommand(dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
+    TriggerLineSpacerEditedCommand(Host* pHost, dlgTriggersMainArea* triggersMainArea, QUndoCommand* parent = nullptr);
     void undo() override;
     void redo() override;
     dlgTriggersMainArea* mpTriggersMainArea = nullptr;
     dlgTriggerPatternEdit* mpPatternItem;
     dlgTriggerEditor* mpEditor = nullptr;
     QTreeWidgetItem* mpItem;
+    TTrigger* mpItemTrigger;
     TTreeWidget* mpTreeWidgetTriggers;
+    QPointer<Host> mpHost;
     int mPrevLineSpacer;
     int mLineSpacer;
 };
@@ -1004,12 +1197,16 @@ public:
     dlgTriggersMainArea* mpTriggersMainArea = nullptr;
     QList<dlgTriggerPatternEdit*> mpTriggerPatternEdit;
     dlgTriggerPatternEdit* mpPatternItem;
+    QScrollArea* mpScrollArea = nullptr;
     QPushButton* mpPushButton;
     dlgTriggerEditor* mpEditor = nullptr;
     QTreeWidgetItem* mpItem;
+    TTrigger* mpItemTrigger;
     TTreeWidget* mpTreeWidgetTriggers;
     QColor mPrevColorTriggerFgColor;
     QColor mColorTriggerFgColor;
+    int mPrevColorTriggerFgAnsi;
+    int mColorTriggerFgAnsi;
     int mRow;
 private:
     QPointer<Host> mpHost;
@@ -1023,12 +1220,16 @@ public:
     void redo() override;
     dlgTriggersMainArea* mpTriggersMainArea = nullptr;
     dlgTriggerPatternEdit* mpPatternItem;
+    QScrollArea* mpScrollArea = nullptr;
     QPushButton* mpPushButton;
     dlgTriggerEditor* mpEditor = nullptr;
     QTreeWidgetItem* mpItem;
+    TTrigger* mpItemTrigger;
     TTreeWidget* mpTreeWidgetTriggers;
     QColor mPrevColorTriggerBgColor;
     QColor mColorTriggerBgColor;
+    int mPrevColorTriggerBgAnsi;
+    int mColorTriggerBgAnsi;
 private:
     QPointer<Host> mpHost;
 };

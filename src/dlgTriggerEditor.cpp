@@ -82,7 +82,7 @@ dlgTriggerEditor::dlgTriggerEditor(Host* pH)
             "href='https://forums.mudlet.org/viewtopic.php?f=6&t=16462'>packages</a> that can help you."
             "<p>Check the manual for <a href='http://wiki.mudlet.org/w/Manual:Introduction#Aliases'>more information</a>.</p>");
 
-    msgInfoAddTrigger = tr("<p>Triggers react on game output. To add a new trigger:"
+    msgInfoAddTrigger = tr("<p>Triggers react on game output. To add a newv trigger:"
                            "<ol><li>Click on the 'Add Item' icon above.</li>"
                            "<li>Define a <strong>pattern</strong> that you want to trigger on.</li>"
                            "<li>Select the appropriate pattern <strong>type</strong>.</li>"
@@ -538,11 +538,20 @@ dlgTriggerEditor::dlgTriggerEditor(Host* pH)
     connect(mSaveItem, &QAction::triggered, this, &dlgTriggerEditor::slot_saveEdits);
 
     undoAction = undoStack->createUndoAction(this, tr("&Undo"));
-    undoAction->setIcon(QIcon(":/icons/edit-undo.png"));
-
+    redoStackMenu = new QMenu(this);
+    redoStackMenu->setIcon(QIcon(qsl(":/icons/edit-redo.png")));
+    redoStackMenu->setTitle("Redo");
     redoAction = undoStack->createRedoAction(this, tr("&Redo"));
-    redoAction->setIcon(QIcon(":/icons/edit-redo.png"));
+    undoStackMenu = new QMenu(this);
+    undoStackMenu->setIcon(QIcon(qsl(":/icons/edit-undo.png")));
+    undoStackMenu->setTitle("Undo");
+    undoStackMenu->addAction(undoAction);
+    redoStackMenu->addAction(redoAction);
+    connect(undoStackMenu->menuAction(), &QAction::triggered, this, &dlgTriggerEditor::slot_undo);
+    connect(redoStackMenu->menuAction(), &QAction::triggered, this, &dlgTriggerEditor::slot_redo);
 
+    connect(undoStackMenu, &QMenu::aboutToShow, this, &dlgTriggerEditor::undoStackContextMenu);
+    connect(redoStackMenu, &QMenu::aboutToShow, this, &dlgTriggerEditor::redoStackContextMenu);
     QAction* copyAction = new QAction(tr("Copy"), this);
     copyAction->setShortcut(QKeySequence(QKeySequence::Copy));
     // only take effect if the treeview is selected, otherwise it hijacks the shortcut from edbee
@@ -646,8 +655,9 @@ dlgTriggerEditor::dlgTriggerEditor(Host* pH)
     toolBar->addAction(mpExportAction);
     toolBar->addAction(mProfileSaveAsAction);
     toolBar->addAction(mProfileSaveAction);
-    toolBar->addAction(undoAction);
-    toolBar->addAction(redoAction);
+//    toolBar->addAction(undoAction);
+    toolBar->addAction(undoStackMenu->menuAction());
+    toolBar->addAction(redoStackMenu->menuAction());
 
     connect(checkBox_displayAllVariables, &QAbstractButton::toggled, this, &dlgTriggerEditor::slot_toggleHiddenVariables);
 
@@ -1035,7 +1045,8 @@ void dlgTriggerEditor::createUndoView()
 {
     QDockWidget* undoDockWidget = new QDockWidget;
     undoDockWidget->setWindowTitle(tr("Command List"));
-    undoDockWidget->setWidget(new QUndoView(undoStack));
+    undoView = new QUndoView(undoStack);
+    undoDockWidget->setWidget(undoView);
     treeWidget_triggers->mpUndoStack = undoStack;
     treeWidget_aliases->mpUndoStack = undoStack;
     treeWidget_timers->mpUndoStack = undoStack;
@@ -3887,19 +3898,15 @@ void dlgTriggerEditor::addTrigger(bool isFolder)
 
 void dlgTriggerEditor::addTriggerCommand(bool isFolder)
 {
-    QTreeWidgetItem* pItem = nullptr;
-    dlgTriggerEditor* editor = this;
-    AddTriggerCommand* command = new AddTriggerCommand(pItem, treeWidget_triggers, isFolder, nullptr);
-    command->mpEditor = editor;
+    AddTriggerCommand* command = new AddTriggerCommand(mpHost, treeWidget_triggers, isFolder);
+    command->mpEditor = this;
     undoStack->push(command);
 }
 
 void dlgTriggerEditor::addAliasCommand(bool isFolder)
 {
-    QTreeWidgetItem* pItem = nullptr;
-    dlgTriggerEditor* editor = this;
-    AddAliasCommand* command = new AddAliasCommand(pItem, treeWidget_aliases, isFolder);
-    command->mpEditor = editor;
+    AddAliasCommand* command = new AddAliasCommand(mpHost, treeWidget_aliases, isFolder);
+    command->mpEditor = this;
     undoStack->push(command);
 }
 
@@ -3932,10 +3939,8 @@ void dlgTriggerEditor::deleteKeyCommand()
 
 void dlgTriggerEditor::addTimerCommand(bool isFolder)
 {
-    QTreeWidgetItem* pItem = nullptr;
-    dlgTriggerEditor* editor = this;
-    AddTimerCommand* command = new AddTimerCommand(pItem, treeWidget_timers, isFolder);
-    command->mpEditor = editor;
+    AddTimerCommand* command = new AddTimerCommand(mpHost, treeWidget_timers, isFolder);
+    command->mpEditor = this;
     undoStack->push(command);
 }
 
@@ -3943,15 +3948,19 @@ void dlgTriggerEditor::addScriptCommand(bool isFolder)
 {
     QTreeWidgetItem* pItem = nullptr;
     dlgTriggerEditor* editor = this;
-    AddScriptCommand* command = new AddScriptCommand(pItem, treeWidget_scripts, isFolder);
+    AddScriptCommand* command = new AddScriptCommand(mpHost, treeWidget_scripts, isFolder);
     command->mpEditor = editor;
     undoStack->push(command);
 }
 
 void dlgTriggerEditor::slot_ScriptNameTextEdited()
 {
-    ScriptNameTextEditedCommand* command = new ScriptNameTextEditedCommand(mpScriptsMainArea);
+    const int id = treeWidget_scripts->currentItem()->data(0, Qt::UserRole).toInt();
+    TScript* pT = mpHost->getScriptUnit()->getScript(id);
+    ScriptNameTextEditedCommand* command = new ScriptNameTextEditedCommand(mpHost, mpScriptsMainArea);
+    command->mpEditor = this;
     command->mpTreeWidgetScripts = treeWidget_scripts;
+    command->mpItemScript = pT;
     command->mpItem = treeWidget_scripts->currentItem();
     command->mPrevScriptName = mPrevScriptName;
     command->mScriptName = mpScriptsMainArea->lineEdit_script_name->text();
@@ -3961,28 +3970,22 @@ void dlgTriggerEditor::slot_ScriptNameTextEdited()
 
 void dlgTriggerEditor::addKeyCommand(bool isFolder)
 {
-    QTreeWidgetItem* pItem = nullptr;
-    dlgTriggerEditor* editor = this;
-    AddKeyCommand* command = new AddKeyCommand(pItem, treeWidget_keys, isFolder);
-    command->mpEditor = editor;
+    AddKeyCommand* command = new AddKeyCommand(mpHost, treeWidget_keys, isFolder);
+    command->mpEditor = this;
     undoStack->push(command);
 }
 
 void dlgTriggerEditor::addActionCommand(bool isFolder)
 {
-    QTreeWidgetItem* pItem = nullptr;
-    dlgTriggerEditor* editor = this;
-    AddActionCommand* command = new AddActionCommand(pItem, treeWidget_actions, isFolder);
-    command->mpEditor = editor;
+    AddActionCommand* command = new AddActionCommand(mpHost, treeWidget_actions, isFolder);
+    command->mpEditor = this;
     undoStack->push(command);
 }
 
 void dlgTriggerEditor::addVarCommand(bool isFolder)
 {
-    QTreeWidgetItem* pItem = nullptr;
-    dlgTriggerEditor* editor = this;
-    AddVarCommand* command = new AddVarCommand(pItem, treeWidget_variables, isFolder);
-    command->mpEditor = editor;
+    AddVarCommand* command = new AddVarCommand(mpHost, treeWidget_variables, isFolder);
+    command->mpEditor = this;
     undoStack->push(command);
 }
 
@@ -5853,6 +5856,14 @@ void dlgTriggerEditor::slot_setupPatternControls(int type)
             // error if saved without setting a color for at least one element:
 
             pPatternItem->lineEdit_pattern->setText(TTrigger::createColorPatternText(TTrigger::scmIgnored, TTrigger::scmIgnored));
+            mPrevColorTriggerFgColor = nullptr;
+            mPrevColorTriggerBgColor = nullptr;
+            const int triggerID = treeWidget_triggers->currentItem()->data(0, Qt::UserRole).toInt();
+            TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(triggerID);
+            pT->mColorTriggerFgColor = QColor();
+            pT->mColorTriggerFgAnsi = -1;
+            pT->mColorTriggerBgColor = QColor();
+            pT->mColorTriggerBgAnsi = -1;
         }
 
         // Only process the text if it looks like it should:
@@ -5911,6 +5922,97 @@ void dlgTriggerEditor::slot_setupPatternControls(int type)
     }
 }
 
+void dlgTriggerEditor::undoStackContextMenu(){
+   undoStackMenu->clear();
+   int curIndex = undoStack->index();
+   for(int i=0; i<= undoStack->count(); i++)
+   {
+       undoStack->setIndex(i);
+       QAction* undo = new QAction(this);
+       QString undoText = undoStack->undoText().isEmpty() ? "<empty>" : undoStack->undoText();
+       if(curIndex == i)
+       {
+           undo->setEnabled(false);
+       }
+       undo->setText(undoText);
+       connect(undo, &QAction::triggered, this, [=]() -> void { dlgTriggerEditor::slot_undoAction(i); });
+       undoStackMenu->addAction(undo);
+   }
+   undoStack->setIndex(curIndex);
+}
+
+void dlgTriggerEditor::redoStackContextMenu(){
+   redoStackMenu->clear();
+   int curIndex = undoStack->index();
+   for(int i=0; i<= undoStack->count(); i++)
+   {
+       undoStack->setIndex(i);
+       if(undoStack->redoText().isEmpty()){
+           continue;
+       }
+       QAction* redo= new QAction(this);
+       QString redoText = undoStack->redoText().isEmpty() ? "<empty>" : undoStack->redoText();
+       if(curIndex-1 == i)
+       {
+           redo->setEnabled(false);
+       }
+       redo->setText(redoText);
+       connect(redo, &QAction::triggered, this, [=]() -> void { dlgTriggerEditor::slot_redoAction(i); });
+       redoStackMenu->addAction(redo);
+   }
+   undoStack->setIndex(curIndex);
+}
+
+void dlgTriggerEditor::slot_undoAction(int idx){
+    undoStack->undo();
+    if(idx != undoStack->index()){
+        undoStack->setIndex(idx);
+    }
+    if(!undoStack->canUndo()){
+        undoStackMenu->setEnabled(false);
+    }
+    if(undoStack->canRedo()){
+        redoStackMenu->setEnabled(true);
+    }
+}
+
+void dlgTriggerEditor::slot_undo(){
+    if(undoStack->canUndo()){
+        undoStack->undo();
+    }
+    if(!undoStack->canUndo()){
+        undoStackMenu->setEnabled(false);
+    }
+    if(undoStack->canRedo()){
+        redoStackMenu->setEnabled(true);
+    }
+}
+
+void dlgTriggerEditor::slot_redo(){
+    if(undoStack->canRedo()){
+        undoStack->redo();
+    }
+    if(!undoStack->canRedo()){
+        redoStackMenu->setEnabled(false);
+    }
+    if(undoStack->canUndo()){
+        undoStackMenu->setEnabled(true);
+    }
+}
+
+void dlgTriggerEditor::slot_redoAction(int idx){
+    if(idx != undoStack->index()){
+        undoStack->setIndex(idx);
+    }
+    undoStack->redo();
+    if(!undoStack->canRedo()){
+        redoStackMenu->setEnabled(false);
+    }
+    if(undoStack->canUndo()){
+        undoStackMenu->setEnabled(true);
+    }
+}
+
 void dlgTriggerEditor::slot_triggerLinePatternItemEdited(int i)
 {
     QComboBox* pBox = qobject_cast<QComboBox*>(sender());
@@ -5925,10 +6027,15 @@ void dlgTriggerEditor::slot_triggerLinePatternItemEdited(int i)
     if (i == mpPrevTriggerPatternItemEdit[row]) {
         return;
     }
+    const int ID = treeWidget_triggers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(ID);
     TriggerLineEditPatternItemEditedCommand* command = new TriggerLineEditPatternItemEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
+    command->mpScrollArea = mpScrollArea;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
+    command->mpItemTrigger = pT;
     command->mpItem = treeWidget_triggers->currentItem();
+    command->mpPatternItem = pPatternItem;
     command->mRow = row;
     command->mPrevTriggerPatternEdit = mpPrevTriggerPatternItemEdit[row];
     command->mTriggerPatternEdit = pPatternItem->comboBox_patternType->currentIndex();
@@ -5944,12 +6051,15 @@ void dlgTriggerEditor::slot_triggerLinePatternEdited(int i)
         return;
     }
     dlgTriggerPatternEdit* pTriggerPattern = mTriggerPatternEdit.at(i);
-
-    TriggerLineEditPatternEditedCommand* command = new TriggerLineEditPatternEditedCommand(mpTriggersMainArea);
+    const int ID = treeWidget_triggers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(ID);
+    TriggerLineEditPatternEditedCommand* command = new TriggerLineEditPatternEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
     command->mpTriggerPattern = pTriggerPattern;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
     command->mpItem = treeWidget_triggers->currentItem();
+    command->mpItemTrigger = pT;
+    command->mItemIndex = treeWidget_triggers->currentIndex();
     command->mPrevLineEditTriggerPattern = mpPrevTriggerPatternEdit[i];
     command->mLineEditTriggerPattern = lineEdit->text();
     command->mRow = i;
@@ -6247,7 +6357,7 @@ void dlgTriggerEditor::slot_keySelected(QTreeWidgetItem* pItem)
     if (pItem != mpCurrentKeyItem) {
         saveKey();
     }
-    qDebug() << "itemid " << pItem->data(0, Qt::UserRole).toInt() << " text: " << pItem->text(0);
+
     mpCurrentKeyItem = pItem;
     mpKeysMainArea->show();
     mpSourceEditorArea->show();
@@ -8703,7 +8813,7 @@ void dlgTriggerEditor::slot_scriptMainAreaDeleteHandler()
     if (mpScriptsMainArea->listWidget_script_registered_event_handlers->currentRow() < 0) {
         return;
     }
-    ScriptRemoveHandlerCommand* command = new ScriptRemoveHandlerCommand(mpScriptsMainArea);
+    ScriptRemoveHandlerCommand* command = new ScriptRemoveHandlerCommand(mpHost, mpScriptsMainArea);
     command->mpItem = treeWidget_scripts->currentItem();
     command->mpTreeWidgetScripts = treeWidget_scripts;
     command->mScriptEventhandler = mpScriptsMainArea->lineEdit_script_event_handler_entry->text();
@@ -8716,7 +8826,7 @@ void dlgTriggerEditor::slot_scriptMainAreaAddHandler()
         return;
     }
     auto addEventHandler = [&]() {
-        ScriptAddHandlerCommand* command = new ScriptAddHandlerCommand(mpScriptsMainArea);
+        ScriptAddHandlerCommand* command = new ScriptAddHandlerCommand(mpHost, mpScriptsMainArea);
         command->mpItem = treeWidget_scripts->currentItem();
         command->mpTreeWidgetScripts = treeWidget_scripts;
         command->mScriptEventhandler = mpScriptsMainArea->lineEdit_script_event_handler_entry->text();
@@ -9427,11 +9537,11 @@ void dlgTriggerEditor::slot_pasteXml()
     }
 
     auto [importedItemType, importedItemID] = reader.importFromClipboard();
-
-    // don't reset the view if what we pasted wasn't a Mudlet editor item
+//    // don't reset the view if what we pasted wasn't a Mudlet editor item
     if (importedItemType == EditorViewType::cmUnknownView && importedItemID == 0) {
         return;
     }
+
 
     mCurrentView = static_cast<EditorViewType>(importedItemType);
     // importing drops the item at the bottom of the list - move it to be a sibling
@@ -9440,57 +9550,46 @@ void dlgTriggerEditor::slot_pasteXml()
     case EditorViewType::cmTriggerView: {
         // in case this is a nested item, grab the parent data for the move function
         // as well. In case it's a root item, this doesn't seem to matter
-        auto parent = treeWidget_triggers->currentIndex().parent();
-        auto parentRow = parent.row();
-        auto parentId = parent.data(Qt::UserRole).toInt();
 
-        const int siblingRow = treeWidget_triggers->currentIndex().row() + 1;
-        mpHost->getTriggerUnit()->reParentTrigger(importedItemID, 0, parentId, parentRow, siblingRow);
+        PasteTriggerCommand* command = new PasteTriggerCommand(mpHost, treeWidget_triggers);
+        command->mpEditor = this;
+        command->mImportedItemID = importedItemID;
+        undoStack->push(command);
         break;
     }
     case EditorViewType::cmTimerView: {
-        auto parent = treeWidget_timers->currentIndex().parent();
-        auto parentRow = parent.row();
-        auto parentId = parent.data(Qt::UserRole).toInt();
-
-        const int siblingRow = treeWidget_timers->currentIndex().row() + 1;
-        mpHost->getTimerUnit()->reParentTimer(importedItemID, 0, parentId, parentRow, siblingRow);
+        PasteTimerCommand* command = new PasteTimerCommand(mpHost, treeWidget_timers);
+        command->mpEditor = this;
+        command->mImportedItemID = importedItemID;
+        undoStack->push(command);
         break;
     }
     case EditorViewType::cmAliasView: {
-        auto parent = treeWidget_aliases->currentIndex().parent();
-        auto parentRow = parent.row();
-        auto parentId = parent.data(Qt::UserRole).toInt();
-
-        const int siblingRow = treeWidget_aliases->currentIndex().row() + 1;
-        mpHost->getAliasUnit()->reParentAlias(importedItemID, 0, parentId, parentRow, siblingRow);
+        PasteAliasCommand* command = new PasteAliasCommand(mpHost, treeWidget_aliases);
+        command->mpEditor = this;
+        command->mImportedItemID = importedItemID;
+        undoStack->push(command);
         break;
     }
     case EditorViewType::cmScriptView: {
-        auto parent = treeWidget_scripts->currentIndex().parent();
-        auto parentRow = parent.row();
-        auto parentId = parent.data(Qt::UserRole).toInt();
-
-        const int siblingRow = treeWidget_scripts->currentIndex().row() + 1;
-        mpHost->getScriptUnit()->reParentScript(importedItemID, 0, parentId, parentRow, siblingRow);
+        PasteScriptCommand* command = new PasteScriptCommand(mpHost, treeWidget_scripts);
+        command->mpEditor = this;
+        command->mImportedItemID = importedItemID;
+        undoStack->push(command);
         break;
     }
     case EditorViewType::cmActionView: {
-        auto parent = treeWidget_actions->currentIndex().parent();
-        auto parentRow = parent.row();
-        auto parentId = parent.data(Qt::UserRole).toInt();
-
-        const int siblingRow = treeWidget_actions->currentIndex().row() + 1;
-        mpHost->getActionUnit()->reParentAction(importedItemID, 0, parentId, parentRow, siblingRow);
+        PasteActionCommand* command = new PasteActionCommand(mpHost, treeWidget_actions);
+        command->mpEditor = this;
+        command->mImportedItemID = importedItemID;
+        undoStack->push(command);
         break;
     }
     case EditorViewType::cmKeysView: {
-        auto parent = treeWidget_keys->currentIndex().parent();
-        auto parentRow = parent.row();
-        auto parentId = parent.data(Qt::UserRole).toInt();
-
-        const int siblingRow = treeWidget_keys->currentIndex().row() + 1;
-        mpHost->getKeyUnit()->reParentKey(importedItemID, 0, parentId, parentRow, siblingRow);
+        PasteKeyCommand* command = new PasteKeyCommand(mpHost, treeWidget_keys);
+        command->mpEditor = this;
+        command->mImportedItemID = importedItemID;
+        undoStack->push(command);
         break;
     }
     case EditorViewType::cmVarsView:
@@ -9800,8 +9899,12 @@ void dlgTriggerEditor::slot_KeyNameTextEdited()
     if (mPrevKeyName == mpKeysMainArea->lineEdit_key_name->text()) {
         return;
     }
-    KeyNameTextEditedCommand* command = new KeyNameTextEditedCommand(mpKeysMainArea);
+    const int id = treeWidget_keys->currentItem()->data(0, Qt::UserRole).toInt();
+    TKey* pT = mpHost->getKeyUnit()->getKey(id);
+    KeyNameTextEditedCommand* command = new KeyNameTextEditedCommand(mpHost, mpKeysMainArea);
+    command->mpEditor = this;
     command->mpItem = treeWidget_keys->currentItem();
+    command->mpItemKey = pT;
     command->mpTreeWidgetKeys = treeWidget_keys;
     command->mpKeysMainArea = mpKeysMainArea;
     command->mPrevKeyName = mPrevKeyName;
@@ -9815,8 +9918,12 @@ void dlgTriggerEditor::slot_KeyCommandTextEdited()
     if (mPrevKeyCommand == mpKeysMainArea->lineEdit_key_command->text()) {
         return;
     }
-    KeyCommandTextEditedCommand* command = new KeyCommandTextEditedCommand(mpKeysMainArea);
+    const int id = treeWidget_keys->currentItem()->data(0, Qt::UserRole).toInt();
+    TKey* pT = mpHost->getKeyUnit()->getKey(id);
+    KeyCommandTextEditedCommand* command = new KeyCommandTextEditedCommand(mpHost, mpKeysMainArea);
+    command->mpEditor = this;
     command->mpItem = treeWidget_keys->currentItem();
+    command->mpItemKey = pT;
     command->mpTreeWidgetKeys = treeWidget_keys;
     command->mpKeysMainArea = mpKeysMainArea;
     command->mPrevKeyCommand = mPrevKeyCommand;
@@ -9854,9 +9961,13 @@ void dlgTriggerEditor::keyGrabCallback(const Qt::Key key, const Qt::KeyboardModi
     if (!pKeyUnit) {
         return;
     }
+    const int id = treeWidget_keys->currentItem()->data(0, Qt::UserRole).toInt();
+    TKey* pT = mpHost->getKeyUnit()->getKey(id);
     const QString keyName = pKeyUnit->getKeyName(key, modifier);
     KeyGrabTextEditedCommand* command = new KeyGrabTextEditedCommand(mpHost, mpKeysMainArea);
     command->mpItem = treeWidget_keys->currentItem();
+    command->mpEditor = this;
+    command->mpItemKey = pT;
     command->mpTreeWidgetKeys = treeWidget_keys;
     command->mKey = key;
     command->mModifier = modifier;
@@ -9868,8 +9979,11 @@ void dlgTriggerEditor::keyGrabCallback(const Qt::Key key, const Qt::KeyboardModi
 
 void dlgTriggerEditor::slot_toggleIsPushDownButton(const int state)
 {
-    ActionButtonCheckboxEditedCommand* command = new ActionButtonCheckboxEditedCommand(mpActionsMainArea);
+    const int id = treeWidget_actions->currentItem()->data(0, Qt::UserRole).toInt();
+    TAction* pT = mpHost->getActionUnit()->getAction(id);
+    ActionButtonCheckboxEditedCommand* command = new ActionButtonCheckboxEditedCommand(mpHost, mpActionsMainArea);
     command->mpEditor = this;
+    command->mpItemAction = pT;
     command->mpItem = treeWidget_actions->currentItem();
     command->mpTreeWidgetActions = treeWidget_actions;
     command->mpActionsMainArea = mpActionsMainArea;
@@ -9884,7 +9998,11 @@ void dlgTriggerEditor::slot_ActionNameTextEdited()
     if (mPrevActionName == mpActionsMainArea->lineEdit_action_name->text()) {
         return;
     }
-    ActionNameTextEditedCommand* command = new ActionNameTextEditedCommand(mpActionsMainArea);
+    const int id = treeWidget_actions->currentItem()->data(0, Qt::UserRole).toInt();
+    TAction* pT = mpHost->getActionUnit()->getAction(id);
+    ActionNameTextEditedCommand* command = new ActionNameTextEditedCommand(mpHost, mpActionsMainArea);
+    command->mpEditor = this;
+    command->mpItemAction = pT;
     command->mpItem = treeWidget_actions->currentItem();
     command->mpTreeWidgetActions = treeWidget_actions;
     command->mpActionsMainArea = mpActionsMainArea;
@@ -9896,7 +10014,11 @@ void dlgTriggerEditor::slot_ActionNameTextEdited()
 
 void dlgTriggerEditor::slot_ActionButtonRotationEdited()
 {
-    ActionButtonRotationEditedCommand* command = new ActionButtonRotationEditedCommand(mpActionsMainArea);
+    const int id = treeWidget_actions->currentItem()->data(0, Qt::UserRole).toInt();
+    TAction* pT = mpHost->getActionUnit()->getAction(id);
+    ActionButtonRotationEditedCommand* command = new ActionButtonRotationEditedCommand(mpHost, mpActionsMainArea);
+    command->mpEditor = this;
+    command->mpItemAction = pT;
     command->mpItem = treeWidget_actions->currentItem();
     command->mpTreeWidgetActions = treeWidget_actions;
     command->mpActionsMainArea = mpActionsMainArea;
@@ -9911,7 +10033,11 @@ void dlgTriggerEditor::slot_ActionCommandDownTextEdited()
     if (mPrevActionDown == mpActionsMainArea->lineEdit_action_button_command_down->text()) {
         return;
     }
-    ActionCommandDownTextEditedCommand* command = new ActionCommandDownTextEditedCommand(mpActionsMainArea);
+    const int id = treeWidget_actions->currentItem()->data(0, Qt::UserRole).toInt();
+    TAction* pT = mpHost->getActionUnit()->getAction(id);
+    ActionCommandDownTextEditedCommand* command = new ActionCommandDownTextEditedCommand(mpHost, mpActionsMainArea);
+    command->mpEditor = this;
+    command->mpItemAction = pT;
     command->mpItem = treeWidget_actions->currentItem();
     command->mpTreeWidgetActions = treeWidget_actions;
     command->mpActionsMainArea = mpActionsMainArea;
@@ -9926,7 +10052,11 @@ void dlgTriggerEditor::slot_ActionCommandUpTextEdited()
     if (mPrevActionUp == mpActionsMainArea->lineEdit_action_button_command_up->text()) {
         return;
     }
-    ActionCommandUpTextEditedCommand* command = new ActionCommandUpTextEditedCommand(mpActionsMainArea);
+    const int id = treeWidget_actions->currentItem()->data(0, Qt::UserRole).toInt();
+    TAction* pT = mpHost->getActionUnit()->getAction(id);
+    ActionCommandUpTextEditedCommand* command = new ActionCommandUpTextEditedCommand(mpHost, mpActionsMainArea);
+    command->mpEditor = this;
+    command->mpItemAction = pT;
     command->mpItem = treeWidget_actions->currentItem();
     command->mpTreeWidgetActions = treeWidget_actions;
     command->mpActionsMainArea = mpActionsMainArea;
@@ -9941,7 +10071,11 @@ void dlgTriggerEditor::slot_ActionCssTextEdited()
     if (mPrevActionCss == mpActionsMainArea->plainTextEdit_action_css->toPlainText()) {
         return;
     }
-    ActionCssTextEditedCommand* command = new ActionCssTextEditedCommand(mpActionsMainArea);
+    const int id = treeWidget_actions->currentItem()->data(0, Qt::UserRole).toInt();
+    TAction* pT = mpHost->getActionUnit()->getAction(id);
+    ActionCssTextEditedCommand* command = new ActionCssTextEditedCommand(mpHost, mpActionsMainArea);
+    command->mpEditor = this;
+    command->mpItemAction = pT;
     command->mpItem = treeWidget_actions->currentItem();
     command->mpTreeWidgetActions = treeWidget_actions;
     command->mpActionsMainArea = mpActionsMainArea;
@@ -9966,9 +10100,14 @@ void dlgTriggerEditor::slot_colorizeTriggerSetFgColor()
     color = color.isValid() ? color : QColorConstants::Transparent;
     const bool keepColor = color == QColorConstants::Transparent;
     mpTriggersMainArea->pushButtonFgColor->setStyleSheet(generateButtonStyleSheet(color));
-    TriggerColorizerFgColorEditedCommand* command = new TriggerColorizerFgColorEditedCommand(mpTriggersMainArea);
+
+    const int ID = treeWidget_triggers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(ID);
+
+    TriggerColorizerFgColorEditedCommand* command = new TriggerColorizerFgColorEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
+    command->mpItemTrigger = pT;
     command->mpItem = treeWidget_triggers->currentItem();
     command->mPrevfgColor = QColor(mpTriggersMainArea->pushButtonFgColor->property(cButtonBaseColor).toString()).name();
     command->mFgColor = color.name();
@@ -9994,9 +10133,14 @@ void dlgTriggerEditor::slot_colorizeTriggerSetBgColor()
     color = color.isValid() ? color : QColorConstants::Transparent;
     const bool keepColor = color == QColorConstants::Transparent;
     mpTriggersMainArea->pushButtonBgColor->setStyleSheet(generateButtonStyleSheet(color));
-    TriggerColorizerBgColorEditedCommand* command = new TriggerColorizerBgColorEditedCommand(mpTriggersMainArea);
+
+    const int ID = treeWidget_triggers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(ID);
+
+    TriggerColorizerBgColorEditedCommand* command = new TriggerColorizerBgColorEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
+    command->mpItemTrigger = pT;
     command->mpItem = treeWidget_triggers->currentItem();
     command->mPrevbgColor = QColor(mpTriggersMainArea->pushButtonBgColor->property(cButtonBaseColor).toString()).name();
     command->mBgColor = color.name();
@@ -10062,11 +10206,23 @@ void dlgTriggerEditor::slot_colorTriggerFg(int i)
     if (!pPatternItem) {
         return;
     }
+    if(i < pT->mColorPatternList.size())
+    {
+        pT->mColorTriggerFgAnsi = pT->mColorPatternList.at(i)->ansiFg;
+        pT->mColorTriggerFgColor = pT->mColorPatternList.at(i)->mFgColor;
+    }
 
-    if (pT->mColorTriggerFgColor.isValid()) {
-        mPrevColorTriggerFgColor = pT->mColorTriggerFgColor;
-    } else {
+    if(!pT->mColorTriggerFgColor.isValid())
+    {
+        pT->mColorTriggerFgColor = QColor();
+        pT->mColorTriggerFgAnsi = -1;
+        mPrevColorTriggerFgAnsi = -1;
         mPrevColorTriggerFgColor = QColor();
+    }
+    else
+    {
+        mPrevColorTriggerFgColor = pT->mColorTriggerFgColor;
+        mPrevColorTriggerFgAnsi = pT->mColorTriggerFgAnsi;
     }
     // This method parses the pattern text and extracts the ansi color values
     // from it - including the special values of DEFAULT (-2) and IGNORE (-1)
@@ -10091,6 +10247,7 @@ void dlgTriggerEditor::slot_colorTriggerFg(int i)
     if (color.isValid()) {
         styleSheet = generateButtonStyleSheet(color);
     }
+    mColorTriggerFgAnsi = pT->mColorTriggerFgAnsi;
     pB->setStyleSheet(styleSheet);
 
     pPatternItem->lineEdit_pattern->setText(TTrigger::createColorPatternText(pT->mColorTriggerFgAnsi, pT->mColorTriggerBgAnsi));
@@ -10098,6 +10255,7 @@ void dlgTriggerEditor::slot_colorTriggerFg(int i)
     if (pT->mColorTriggerFgAnsi == TTrigger::scmIgnored) {
         //: Color trigger ignored foreground color button, ensure all three instances have the same text
         pB->setText(tr("Foreground color ignored"));
+        mPrevColorTriggerFgAnsi = pT->mColorTriggerFgAnsi;
     } else if (pT->mColorTriggerFgAnsi == TTrigger::scmDefault) {
         //: Color trigger default foreground color button, ensure all three instances have the same text
         pB->setText(tr("Default foreground color"));
@@ -10113,11 +10271,15 @@ void dlgTriggerEditor::slot_colorTriggerFg(int i)
     command->mpEditor = this;
     command->mpItem = pItem;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
+    command->mpItemTrigger = pT;
     command->mpPushButton = pB;
     command->mpTriggerPatternEdit = mTriggerPatternEdit;
     command->mRow = i;
+    command->mpScrollArea = mpScrollArea;
     command->mpPatternItem = pPatternItem;
     command->mPrevColorTriggerFgColor = mPrevColorTriggerFgColor;
+    command->mPrevColorTriggerFgAnsi = mPrevColorTriggerFgAnsi;
+    command->mColorTriggerFgAnsi = mColorTriggerFgAnsi;
     command->mColorTriggerFgColor = color;
     undoStack->push(command);
     saveTrigger();
@@ -10146,6 +10308,24 @@ void dlgTriggerEditor::slot_colorTriggerBg(int i)
     if (!pPatternItem) {
         return;
     }
+    if(i < pT->mColorPatternList.size())
+    {
+        pT->mColorTriggerBgAnsi = pT->mColorPatternList.at(i)->ansiBg;
+        pT->mColorTriggerBgColor = pT->mColorPatternList.at(i)->mBgColor;
+    }
+
+    if(!pT->mColorTriggerBgColor.isValid())
+    {
+        pT->mColorTriggerBgColor = QColor();
+        pT->mColorTriggerBgAnsi = -1;
+        mPrevColorTriggerBgAnsi = -1;
+        mPrevColorTriggerBgColor = QColor();
+    }
+    else{
+        mPrevColorTriggerBgColor = pT->mColorTriggerBgColor;
+        mPrevColorTriggerBgAnsi = pT->mColorTriggerBgAnsi;
+    }
+
 
     // This method parses the pattern text and extracts the ansi color values
     // from it - including the special values of DEFAULT (-2) and IGNORE (-1)
@@ -10169,13 +10349,14 @@ void dlgTriggerEditor::slot_colorTriggerBg(int i)
     if (color.isValid()) {
         styleSheet = generateButtonStyleSheet(color);
     }
+    mColorTriggerBgAnsi = pT->mColorTriggerBgAnsi;
     pB->setStyleSheet(styleSheet);
-
     pPatternItem->lineEdit_pattern->setText(TTrigger::createColorPatternText(pT->mColorTriggerFgAnsi, pT->mColorTriggerBgAnsi));
 
     if (pT->mColorTriggerBgAnsi == TTrigger::scmIgnored) {
         //: Color trigger ignored background color button, ensure all three instances have the same text
         pB->setText(tr("Background color ignored"));
+        mPrevColorTriggerBgAnsi = pT->mColorTriggerBgAnsi;
     } else if (pT->mColorTriggerBgAnsi == TTrigger::scmDefault) {
         //: Color trigger default background color button, ensure all three instances have the same text
         pB->setText(tr("Default background color"));
@@ -10186,18 +10367,18 @@ void dlgTriggerEditor::slot_colorTriggerBg(int i)
     if (pT->mColorTriggerBgAnsi == TTrigger::scmIgnored) {
         return;
     }
-    if (i >= pT->mColorPatternList.size()) {
-        mPrevColorTriggerBgColor = QColor();
-    } else {
-        mPrevColorTriggerBgColor = pT->mColorPatternList.at(i)->mBgColor;
-    }
+
     TriggerColorBGEditedCommand* command = new TriggerColorBGEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
     command->mpItem = pItem;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
+    command->mpItemTrigger = pT;
     command->mpPushButton = pB;
+    command->mpScrollArea = mpScrollArea;
     command->mpPatternItem = pPatternItem;
     command->mPrevColorTriggerBgColor = mPrevColorTriggerBgColor;
+    command->mPrevColorTriggerBgAnsi = mPrevColorTriggerBgAnsi;
+    command->mColorTriggerBgAnsi = mColorTriggerBgAnsi;
     command->mColorTriggerBgColor = color;
     undoStack->push(command);
     saveTrigger();
@@ -10560,9 +10741,16 @@ void dlgTriggerEditor::slot_clearSoundFile()
 
 void dlgTriggerEditor::slot_lineEditTriggerNameTextEdited()
 {
-    TriggerNameTextEditedCommand* command = new TriggerNameTextEditedCommand(mpTriggersMainArea);
+    if(mPrevTriggerName == mpTriggersMainArea->lineEdit_trigger_name->text())
+    {
+        return;
+    }
+    const int ID = treeWidget_triggers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(ID);
+    TriggerNameTextEditedCommand* command = new TriggerNameTextEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
+    command->mpItemTrigger = pT;
     command->mpItem = treeWidget_triggers->currentItem();
     command->mPrevLineEditTriggerName = mPrevTriggerName;
     command->mLineEditTriggerName = mpTriggersMainArea->lineEdit_trigger_name->text();
@@ -10572,9 +10760,16 @@ void dlgTriggerEditor::slot_lineEditTriggerNameTextEdited()
 
 void dlgTriggerEditor::slot_lineEditTriggerCommandTextEdited()
 {
-    TriggerCommandTextEditedCommand* command = new TriggerCommandTextEditedCommand(mpTriggersMainArea);
+    if(mPrevTriggerCommand == mpTriggersMainArea->lineEdit_trigger_command->text())
+    {
+        return;
+    }
+    const int ID = treeWidget_triggers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(ID);
+    TriggerCommandTextEditedCommand* command = new TriggerCommandTextEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
+    command->mpItemTrigger = pT;
     command->mpItem = treeWidget_triggers->currentItem();
     command->mPrevLineEditTriggerCommand = mPrevTriggerCommand;
     command->mLineEditTriggerCommand = mpTriggersMainArea->lineEdit_trigger_command->text();
@@ -10584,9 +10779,12 @@ void dlgTriggerEditor::slot_lineEditTriggerCommandTextEdited()
 
 void dlgTriggerEditor::slot_triggerFireLengthEdited(int i)
 {
-    TriggerFireLengthEditedCommand* command = new TriggerFireLengthEditedCommand(mpTriggersMainArea);
+    const int ID = treeWidget_triggers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(ID);
+    TriggerFireLengthEditedCommand* command = new TriggerFireLengthEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
+    command->mpItemTrigger = pT;
     command->mpItem = treeWidget_triggers->currentItem();
     command->mPrevFireLength = mPrevFireLength;
     command->mFireLength = mpTriggersMainArea->spinBox_stayOpen->value();
@@ -10596,9 +10794,12 @@ void dlgTriggerEditor::slot_triggerFireLengthEdited(int i)
 
 void dlgTriggerEditor::slot_triggerPlaySoundEdited(bool on)
 {
-    TriggerPlaySoundEditedCommand* command = new TriggerPlaySoundEditedCommand(mpTriggersMainArea);
+    const int ID = treeWidget_triggers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(ID);
+    TriggerPlaySoundEditedCommand* command = new TriggerPlaySoundEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
+    command->mpItemTrigger = pT;
     command->mpItem = treeWidget_triggers->currentItem();
     command->mPrevGroupBoxSoundTrigger = mPrevGroupBox_soundTrigger;
     command->mGroupBoxSoundTrigger = mpTriggersMainArea->groupBox_soundTrigger->isChecked();
@@ -10608,9 +10809,12 @@ void dlgTriggerEditor::slot_triggerPlaySoundEdited(bool on)
 
 void dlgTriggerEditor::slot_triggerPlaySoundFileEdited(const QString& text)
 {
-    TriggerPlaySoundFileEditedCommand* command = new TriggerPlaySoundFileEditedCommand(mpTriggersMainArea);
+    const int ID = treeWidget_triggers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(ID);
+    TriggerPlaySoundFileEditedCommand* command = new TriggerPlaySoundFileEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
+    command->mpItemTrigger = pT;
     command->mpItem = treeWidget_triggers->currentItem();
     command->mPrevLineEditSoundFile = mPrevLineEdit_soundFile;
     command->mLineEditSoundFile = mpTriggersMainArea->lineEdit_soundFile->text();
@@ -10620,9 +10824,12 @@ void dlgTriggerEditor::slot_triggerPlaySoundFileEdited(const QString& text)
 
 void dlgTriggerEditor::slot_triggerColorizerEdited(bool on)
 {
-    TriggerColorizerEditedCommand* command = new TriggerColorizerEditedCommand(mpTriggersMainArea);
+    const int ID = treeWidget_triggers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(ID);
+    TriggerColorizerEditedCommand* command = new TriggerColorizerEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
+    command->mpItemTrigger = pT;
     command->mpItem = treeWidget_triggers->currentItem();
     command->mPrevBoxTriggerColorizer = mPrevBox_triggerColorizer;
     command->mBoxTriggerColorizer = mpTriggersMainArea->groupBox_triggerColorizer->isChecked();
@@ -10632,9 +10839,12 @@ void dlgTriggerEditor::slot_triggerColorizerEdited(bool on)
 
 void dlgTriggerEditor::slot_triggerPerlSlashGOptionEdited(int on)
 {
-    TriggerPerlSlashGOptionEditedCommand* command = new TriggerPerlSlashGOptionEditedCommand(mpTriggersMainArea);
+    const int ID = treeWidget_triggers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(ID);
+    TriggerPerlSlashGOptionEditedCommand* command = new TriggerPerlSlashGOptionEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
+    command->mpItemTrigger = pT;
     command->mpItem = treeWidget_triggers->currentItem();
     command->mPrevPerlSlashGOption = mPrevPerlSlashGOption;
     command->mPerlSlashGOption = mpTriggersMainArea->checkBox_perlSlashGOption->isChecked();
@@ -10644,9 +10854,12 @@ void dlgTriggerEditor::slot_triggerPerlSlashGOptionEdited(int on)
 
 void dlgTriggerEditor::slot_triggerGroupFilterEdited(int on)
 {
-    TriggerGroupFilterEditedCommand* command = new TriggerGroupFilterEditedCommand(mpTriggersMainArea);
+    const int ID = treeWidget_triggers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(ID);
+    TriggerGroupFilterEditedCommand* command = new TriggerGroupFilterEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
+    command->mpItemTrigger = pT;
     command->mpItem = treeWidget_triggers->currentItem();
     command->mPrevFilterTrigger = mPrevFilterTrigger;
     command->mFilterTrigger = mpTriggersMainArea->checkBox_filterTrigger->isChecked();
@@ -10656,9 +10869,12 @@ void dlgTriggerEditor::slot_triggerGroupFilterEdited(int on)
 
 void dlgTriggerEditor::slot_triggerMultiLineEdited(bool on)
 {
-    TriggerMultiLineEditedCommand* command = new TriggerMultiLineEditedCommand(mpTriggersMainArea);
+    const int ID = treeWidget_triggers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(ID);
+    TriggerMultiLineEditedCommand* command = new TriggerMultiLineEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
+    command->mpItemTrigger = pT;
     command->mpItem = treeWidget_triggers->currentItem();
     command->mPrevMultiLineTrigger = mPrevMultiLineTrigger;
     command->mMultiLineTrigger = mpTriggersMainArea->groupBox_multiLineTrigger->isChecked();
@@ -10668,9 +10884,12 @@ void dlgTriggerEditor::slot_triggerMultiLineEdited(bool on)
 
 void dlgTriggerEditor::slot_triggerLineMarginEdited(int i)
 {
-    TriggerLineMarginEditedCommand* command = new TriggerLineMarginEditedCommand(mpTriggersMainArea);
+    const int ID = treeWidget_triggers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(ID);
+    TriggerLineMarginEditedCommand* command = new TriggerLineMarginEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
     command->mpTreeWidgetTriggers = treeWidget_triggers;
+    command->mpItemTrigger = pT;
     command->mpItem = treeWidget_triggers->currentItem();
     command->mPrevLineMargin = mPrevLineMargin;
     command->mLineMargin = mpTriggersMainArea->spinBox_lineMargin->value();
@@ -10680,8 +10899,11 @@ void dlgTriggerEditor::slot_triggerLineMarginEdited(int i)
 
 void dlgTriggerEditor::slot_triggerLineSpacerEdited(int i)
 {
-    TriggerLineSpacerEditedCommand* command = new TriggerLineSpacerEditedCommand(mpTriggersMainArea);
+    const int ID = treeWidget_triggers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(ID);
+    TriggerLineSpacerEditedCommand* command = new TriggerLineSpacerEditedCommand(mpHost, mpTriggersMainArea);
     command->mpEditor = this;
+    command->mpItemTrigger = pT;
     command->mpPatternItem = mTriggerPatternEdit[i];
     command->mpTreeWidgetTriggers = treeWidget_triggers;
     command->mpItem = treeWidget_triggers->currentItem();
@@ -10693,9 +10915,16 @@ void dlgTriggerEditor::slot_triggerLineSpacerEdited(int i)
 
 void dlgTriggerEditor::slot_AliasNameTextEdited()
 {
-    AliasNameTextEditedCommand* command = new AliasNameTextEditedCommand(mpAliasMainArea);
+    if(mPrevAliasName == mpAliasMainArea->lineEdit_alias_name->text()){
+        return;
+    }
+    const int aliasID = treeWidget_aliases->currentItem()->data(0, Qt::UserRole).toInt();
+    TAlias* pT = mpHost->getAliasUnit()->getAlias(aliasID);
+    AliasNameTextEditedCommand* command = new AliasNameTextEditedCommand(mpHost, mpAliasMainArea);
+    command->mpEditor = this;
     command->mpItem = treeWidget_aliases->currentItem();
     command->mpTreeWidgetAliases = treeWidget_aliases;
+    command->mpItemAlias = pT;
     command->mpAliasMainArea = mpAliasMainArea;
     command->mPrevAliasName = mPrevAliasName;
     command->mAliasName = mpAliasMainArea->lineEdit_alias_name->text();
@@ -10705,10 +10934,17 @@ void dlgTriggerEditor::slot_AliasNameTextEdited()
 
 void dlgTriggerEditor::slot_AliasCommandTextEdited()
 {
-    AliasCommandTextEditedCommand* command = new AliasCommandTextEditedCommand(mpAliasMainArea);
+    if(mPrevAliasCommand == mpAliasMainArea->lineEdit_alias_command->text()){
+        return;
+    }
+    const int aliasID = treeWidget_aliases->currentItem()->data(0, Qt::UserRole).toInt();
+    TAlias* pT = mpHost->getAliasUnit()->getAlias(aliasID);
+    AliasCommandTextEditedCommand* command = new AliasCommandTextEditedCommand(mpHost, mpAliasMainArea);
+    command->mpEditor = this;
     command->mpItem = treeWidget_aliases->currentItem();
     command->mpTreeWidgetAliases = treeWidget_aliases;
     command->mpAliasMainArea = mpAliasMainArea;
+    command->mpItemAlias = pT;
     command->mPrevAliasCommand = mPrevAliasCommand;
     command->mAliasCommand = mpAliasMainArea->lineEdit_alias_command->text();
     undoStack->push(command);
@@ -10717,9 +10953,16 @@ void dlgTriggerEditor::slot_AliasCommandTextEdited()
 
 void dlgTriggerEditor::slot_AliasPatternTextEdited()
 {
-    AliasPatternTextEditedCommand* command = new AliasPatternTextEditedCommand(mpAliasMainArea);
+    if(mPrevAliasPattern == mpAliasMainArea->lineEdit_alias_pattern->text()){
+        return;
+    }
+    const int aliasID = treeWidget_aliases->currentItem()->data(0, Qt::UserRole).toInt();
+    TAlias* pT = mpHost->getAliasUnit()->getAlias(aliasID);
+    AliasPatternTextEditedCommand* command = new AliasPatternTextEditedCommand(mpHost, mpAliasMainArea);
+    command->mpEditor = this;
     command->mpItem = treeWidget_aliases->currentItem();
     command->mpTreeWidgetAliases = treeWidget_aliases;
+    command->mpItemAlias = pT;
     command->mpAliasMainArea = mpAliasMainArea;
     command->mPrevAliasPattern = mPrevAliasPattern;
     command->mAliasPattern = mpAliasMainArea->lineEdit_alias_pattern->text();
@@ -10729,7 +10972,14 @@ void dlgTriggerEditor::slot_AliasPatternTextEdited()
 
 void dlgTriggerEditor::slot_TimerNameTextEdited()
 {
-    TimerNameTextEditedCommand* command = new TimerNameTextEditedCommand(mpTimersMainArea);
+    if(mPrevTimerName == mpTimersMainArea->lineEdit_timer_name->text()){
+        return;
+    }
+    const int id = treeWidget_timers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTimer* pT = mpHost->getTimerUnit()->getTimer(id);
+    TimerNameTextEditedCommand* command = new TimerNameTextEditedCommand(mpHost, mpTimersMainArea);
+    command->mpEditor = this;
+    command->mpItemTimer = pT;
     command->mpItem = treeWidget_timers->currentItem();
     command->mpTreeWidgetTimers = treeWidget_timers;
     command->mpTimersMainArea = mpTimersMainArea;
@@ -10741,7 +10991,14 @@ void dlgTriggerEditor::slot_TimerNameTextEdited()
 
 void dlgTriggerEditor::slot_TimerCommandTextEdited()
 {
-    TimerCommandTextEditedCommand* command = new TimerCommandTextEditedCommand(mpTimersMainArea);
+    if(mPrevTimerCommand == mpTimersMainArea->lineEdit_timer_command->text()){
+        return;
+    }
+    const int id = treeWidget_timers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTimer* pT = mpHost->getTimerUnit()->getTimer(id);
+    TimerCommandTextEditedCommand* command = new TimerCommandTextEditedCommand(mpHost, mpTimersMainArea);
+    command->mpEditor = this;
+    command->mpItemTimer = pT;
     command->mpItem = treeWidget_timers->currentItem();
     command->mpTreeWidgetTimers = treeWidget_timers;
     command->mpTimersMainArea = mpTimersMainArea;
@@ -10753,7 +11010,11 @@ void dlgTriggerEditor::slot_TimerCommandTextEdited()
 
 void dlgTriggerEditor::slot_TimerHoursTextEdited()
 {
-    TimerHoursTextEditedCommand* command = new TimerHoursTextEditedCommand(mpTimersMainArea);
+    const int id = treeWidget_timers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTimer* pT = mpHost->getTimerUnit()->getTimer(id);
+    TimerHoursTextEditedCommand* command = new TimerHoursTextEditedCommand(mpHost, mpTimersMainArea);
+    command->mpEditor = this;
+    command->mpItemTimer = pT;
     command->mpItem = treeWidget_timers->currentItem();
     command->mpTreeWidgetTimers = treeWidget_timers;
     command->mpTimersMainArea = mpTimersMainArea;
@@ -10765,7 +11026,11 @@ void dlgTriggerEditor::slot_TimerHoursTextEdited()
 
 void dlgTriggerEditor::slot_TimerMinutesTextEdited()
 {
-    TimerMinutesTextEditedCommand* command = new TimerMinutesTextEditedCommand(mpTimersMainArea);
+    const int id = treeWidget_timers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTimer* pT = mpHost->getTimerUnit()->getTimer(id);
+    TimerMinutesTextEditedCommand* command = new TimerMinutesTextEditedCommand(mpHost, mpTimersMainArea);
+    command->mpEditor = this;
+    command->mpItemTimer = pT;
     command->mpItem = treeWidget_timers->currentItem();
     command->mpTreeWidgetTimers = treeWidget_timers;
     command->mpTimersMainArea = mpTimersMainArea;
@@ -10777,7 +11042,11 @@ void dlgTriggerEditor::slot_TimerMinutesTextEdited()
 
 void dlgTriggerEditor::slot_TimerSecondsTextEdited()
 {
-    TimerSecondsTextEditedCommand* command = new TimerSecondsTextEditedCommand(mpTimersMainArea);
+    const int id = treeWidget_timers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTimer* pT = mpHost->getTimerUnit()->getTimer(id);
+    TimerSecondsTextEditedCommand* command = new TimerSecondsTextEditedCommand(mpHost, mpTimersMainArea);
+    command->mpEditor = this;
+    command->mpItemTimer = pT;
     command->mpItem = treeWidget_timers->currentItem();
     command->mpTreeWidgetTimers = treeWidget_timers;
     command->mpTimersMainArea = mpTimersMainArea;
@@ -10789,7 +11058,11 @@ void dlgTriggerEditor::slot_TimerSecondsTextEdited()
 
 void dlgTriggerEditor::slot_TimerMilliSecondsTextEdited()
 {
-    TimerMilliSecondsTextEditedCommand* command = new TimerMilliSecondsTextEditedCommand(mpTimersMainArea);
+    const int id = treeWidget_timers->currentItem()->data(0, Qt::UserRole).toInt();
+    TTimer* pT = mpHost->getTimerUnit()->getTimer(id);
+    TimerMilliSecondsTextEditedCommand* command = new TimerMilliSecondsTextEditedCommand(mpHost, mpTimersMainArea);
+    command->mpEditor = this;
+    command->mpItemTimer = pT;
     command->mpItem = treeWidget_timers->currentItem();
     command->mpTreeWidgetTimers = treeWidget_timers;
     command->mpTimersMainArea = mpTimersMainArea;
