@@ -3,8 +3,8 @@
 
 #include "TTreeWidget.h"
 #include "dlgTriggerEditor.h"
-#include <QPointer>
 #include <QListWidgetItem>
+#include <QPointer>
 #include <QUndoCommand>
 class Host;
 class LuaInterface;
@@ -29,7 +29,7 @@ public:
 
 private:
     QPointer<Host> mpHost;
-    QTreeWidgetItem* mpItem = nullptr;    
+    QTreeWidgetItem* mpItem = nullptr;
     QTreeWidgetItem* mpParent = nullptr;
     TTreeWidget* mpTreeWidgetTriggers;
     bool mIsFolder;
@@ -255,7 +255,7 @@ private:
     QTreeWidgetItem* mpItem = nullptr;
     QTreeWidgetItem* mpParent;
     TTreeWidget* mpTreeWidgetTimers;
-    QPointer<Host> mpHost;    
+    QPointer<Host> mpHost;
     bool mIsFolder;
 };
 
@@ -713,7 +713,7 @@ public:
 private:
     QTreeWidgetItem* mpItem = nullptr;
     QTreeWidgetItem* mpParent;
-    TTreeWidget* mpTreeWidgetActions;    
+    TTreeWidget* mpTreeWidgetActions;
     QPointer<Host> mpHost;
     bool mIsFolder;
 };
@@ -872,7 +872,7 @@ class ActionCssTextEditedCommand : public QUndoCommand
 public:
     ActionCssTextEditedCommand(Host* pHost, dlgActionMainArea* actionsMainArea, QUndoCommand* parent = nullptr);
     int id() const override;
-    bool mergeWith(const QUndoCommand *command) override;
+    bool mergeWith(const QUndoCommand* command) override;
     void undo() override;
     void redo() override;
     dlgTriggerEditor* mpEditor = nullptr;
@@ -1147,6 +1147,7 @@ public:
     int mPrevTriggerPatternEdit;
     int mTriggerPatternEdit;
     int mRow;
+
 private:
     QPointer<Host> mpHost;
 };
@@ -1208,6 +1209,7 @@ public:
     int mPrevColorTriggerFgAnsi;
     int mColorTriggerFgAnsi;
     int mRow;
+
 private:
     QPointer<Host> mpHost;
 };
@@ -1230,6 +1232,7 @@ public:
     QColor mColorTriggerBgColor;
     int mPrevColorTriggerBgAnsi;
     int mColorTriggerBgAnsi;
+
 private:
     QPointer<Host> mpHost;
 };

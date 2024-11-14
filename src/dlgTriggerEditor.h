@@ -580,6 +580,7 @@ private:
     QAction* mDeleteItem = nullptr;
     QAction* mAddGroup = nullptr;
     QAction* mSaveItem = nullptr;
+    void slot_undoStackIndexChanged(int idx);
     QAction* undoAction = nullptr;
     QAction* redoAction = nullptr;
     QMenu* undoStackMenu = nullptr;

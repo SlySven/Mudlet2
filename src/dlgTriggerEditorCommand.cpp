@@ -72,8 +72,7 @@ void PasteTriggerCommand::undo()
         return;
     }
 
-    if(!mImportedItemID)
-    {
+    if (!mImportedItemID) {
         return;
     }
     mpEditor->selectTriggerByID(mImportedItemID);
@@ -81,21 +80,17 @@ void PasteTriggerCommand::undo()
 
     mpParent = mpItem->parent();
     mpParent->removeChild(mpItem);
-
 }
 
 void PasteTriggerCommand::redo()
 {
-    if(!mpItem)
-    {
+    if (!mpItem) {
         auto parent = mpTreeWidgetTriggers->currentIndex().parent();
         auto parentRow = parent.row();
         auto parentId = parent.data(Qt::UserRole).toInt();
         const int siblingRow = mpTreeWidgetTriggers->currentIndex().row() + 1;
         mpHost->getTriggerUnit()->reParentTrigger(mImportedItemID, 0, parentId, parentRow, siblingRow);
-    }
-    else
-    {
+    } else {
         int count = mpParent->childCount();
         mpParent->insertChild(count <= 0 ? 0 : count, mpItem);
     }
@@ -106,8 +101,7 @@ void PasteTriggerCommand::redo()
     setText(QObject::tr("Paste trigger"));
 }
 
-DeleteTriggerCommand::DeleteTriggerCommand(Host* pHost, QTreeWidgetItem* pItem, TTreeWidget* treeWidgetTriggers, QUndoCommand* parent)
-    : QUndoCommand(parent), mpHost(pHost)
+DeleteTriggerCommand::DeleteTriggerCommand(Host* pHost, QTreeWidgetItem* pItem, TTreeWidget* treeWidgetTriggers, QUndoCommand* parent) : QUndoCommand(parent), mpHost(pHost)
 {
     mpItem = pItem;
     mpParent = mpItem->parent();
@@ -255,8 +249,7 @@ void PasteAliasCommand::undo()
         return;
     }
 
-    if(!mImportedItemID)
-    {
+    if (!mImportedItemID) {
         return;
     }
     mpEditor->selectAliasByID(mImportedItemID);
@@ -274,9 +267,7 @@ void PasteAliasCommand::redo()
 
         const int siblingRow = mpTreeWidgetAliases->currentIndex().row() + 1;
         mpHost->getAliasUnit()->reParentAlias(mImportedItemID, 0, parentId, parentRow, siblingRow);
-    }
-    else
-    {
+    } else {
         int count = mpParent->childCount();
         mpParent->insertChild(count <= 0 ? 0 : count, mpItem);
     }
@@ -531,8 +522,7 @@ void PasteTimerCommand::undo()
         return;
     }
 
-    if(!mImportedItemID)
-    {
+    if (!mImportedItemID) {
         return;
     }
 
@@ -545,16 +535,13 @@ void PasteTimerCommand::undo()
 
 void PasteTimerCommand::redo()
 {
-    if(!mpItem)
-    {
+    if (!mpItem) {
         auto parent = mpTreeWidgetTimers->currentIndex().parent();
         auto parentRow = parent.row();
         auto parentId = parent.data(Qt::UserRole).toInt();
         const int siblingRow = mpTreeWidgetTimers->currentIndex().row() + 1;
         mpHost->getTimerUnit()->reParentTimer(mImportedItemID, 0, parentId, parentRow, siblingRow);
-    }
-    else
-    {
+    } else {
         int count = mpParent->childCount();
         mpParent->insertChild(count <= 0 ? 0 : count, mpItem);
     }
@@ -914,8 +901,7 @@ void PasteScriptCommand::undo()
         return;
     }
 
-    if(!mImportedItemID)
-    {
+    if (!mImportedItemID) {
         return;
     }
 
@@ -928,16 +914,13 @@ void PasteScriptCommand::undo()
 
 void PasteScriptCommand::redo()
 {
-    if(!mpItem)
-    {
+    if (!mpItem) {
         auto parent = mpTreeWidgetScripts->currentIndex().parent();
         auto parentRow = parent.row();
         auto parentId = parent.data(Qt::UserRole).toInt();
         const int siblingRow = mpTreeWidgetScripts->currentIndex().row() + 1;
         mpHost->getTriggerUnit()->reParentTrigger(mImportedItemID, 0, parentId, parentRow, siblingRow);
-    }
-    else
-    {
+    } else {
         int count = mpParent->childCount();
         mpParent->insertChild(count <= 0 ? 0 : count, mpItem);
     }
@@ -1189,8 +1172,7 @@ void PasteKeyCommand::undo()
         return;
     }
 
-    if(!mImportedItemID)
-    {
+    if (!mImportedItemID) {
         return;
     }
     mpEditor->selectKeyByID(mImportedItemID);
@@ -1202,16 +1184,13 @@ void PasteKeyCommand::undo()
 
 void PasteKeyCommand::redo()
 {
-    if(!mpItem)
-    {
+    if (!mpItem) {
         auto parent = mpTreeWidgetKeys->currentIndex().parent();
         auto parentRow = parent.row();
         auto parentId = parent.data(Qt::UserRole).toInt();
         const int siblingRow = mpTreeWidgetKeys->currentIndex().row() + 1;
         mpHost->getKeyUnit()->reParentKey(mImportedItemID, 0, parentId, parentRow, siblingRow);
-    }
-    else
-    {
+    } else {
         int count = mpParent->childCount();
         mpParent->insertChild(count <= 0 ? 0 : count, mpItem);
     }
@@ -1378,8 +1357,7 @@ void KeyCommandTextEditedCommand::redo()
     setText(QObject::tr("Edit key command"));
 }
 
-KeyGrabTextEditedCommand::KeyGrabTextEditedCommand(Host* pHost, dlgKeysMainArea* keysMainArea, QUndoCommand* parent)
-    : QUndoCommand(parent), mpHost(pHost)
+KeyGrabTextEditedCommand::KeyGrabTextEditedCommand(Host* pHost, dlgKeysMainArea* keysMainArea, QUndoCommand* parent) : QUndoCommand(parent), mpHost(pHost)
 {
     mpKeysMainArea = keysMainArea;
 }
@@ -1486,8 +1464,7 @@ void PasteActionCommand::undo()
         return;
     }
 
-    if(!mImportedItemID)
-    {
+    if (!mImportedItemID) {
         return;
     }
     mpEditor->selectActionByID(mImportedItemID);
@@ -1499,16 +1476,13 @@ void PasteActionCommand::undo()
 
 void PasteActionCommand::redo()
 {
-    if(!mpItem)
-    {
+    if (!mpItem) {
         auto parent = mpTreeWidgetActions->currentIndex().parent();
         auto parentRow = parent.row();
         auto parentId = parent.data(Qt::UserRole).toInt();
         const int siblingRow = mpTreeWidgetActions->currentIndex().row() + 1;
         mpHost->getActionUnit()->reParentAction(mImportedItemID, 0, parentId, parentRow, siblingRow);
-    }
-    else
-    {
+    } else {
         int count = mpParent->childCount();
         mpParent->insertChild(count <= 0 ? 0 : count, mpItem);
     }
@@ -1805,7 +1779,7 @@ ActionCssTextEditedCommand::ActionCssTextEditedCommand(Host* pHost, dlgActionMai
 
 int ActionCssTextEditedCommand::id() const
 {
-    const short id = reinterpret_cast<uintptr_t>(typeid(this).name());
+    const quint16 id = reinterpret_cast<uintptr_t>(typeid(this).name());
     return id;
 }
 
@@ -1838,8 +1812,7 @@ void ActionCssTextEditedCommand::undo()
     auto curItem = mpTreeWidgetActions->currentItem();
     const int actionID = curItem->data(0, Qt::UserRole).toInt();
     int id = mpItemAction->getID();
-    if(actionID != id)
-    {
+    if (actionID != id) {
         mpEditor->selectActionByID(id);
         mpItem = mpTreeWidgetActions->currentItem();
     }
@@ -1862,8 +1835,7 @@ void ActionCssTextEditedCommand::redo()
     auto curItem = mpTreeWidgetActions->currentItem();
     const int actionID = curItem->data(0, Qt::UserRole).toInt();
     int id = mpItemAction->getID();
-    if(actionID != id)
-    {
+    if (actionID != id) {
         mpEditor->selectActionByID(id);
         mpItem = mpTreeWidgetActions->currentItem();
     }
@@ -1985,8 +1957,7 @@ void DeleteVarCommand::redo()
     setText(QObject::tr("Delete variable"));
 }
 
-MoveVariableCommand::MoveVariableCommand(
-        Host* pHost, TTreeWidget* treeWidget_variables, QTreeWidgetItem* parentItem, QTreeWidgetItem* cItem, QTreeWidgetItem* prevParentItem, QUndoCommand* parent)
+MoveVariableCommand::MoveVariableCommand(Host* pHost, TTreeWidget* treeWidget_variables, QTreeWidgetItem* parentItem, QTreeWidgetItem* cItem, QTreeWidgetItem* prevParentItem, QUndoCommand* parent)
 : QUndoCommand(parent), mpHost(pHost)
 {
     mpTreeWidgetVariables = treeWidget_variables;
