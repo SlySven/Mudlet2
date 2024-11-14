@@ -11139,7 +11139,7 @@ void dlgTriggerEditor::slot_TimerMinutesTextEdited()
 {
     const int id = treeWidget_timers->currentItem()->data(0, Qt::UserRole).toInt();
     TTimer* pT = mpHost->getTimerUnit()->getTimer(id);
-    if(!pT){
+    if (!pT) {
         return;
     }
     TimerMinutesTextEditedCommand* command = new TimerMinutesTextEditedCommand(mpHost, mpTimersMainArea);
@@ -11158,7 +11158,7 @@ void dlgTriggerEditor::slot_TimerSecondsTextEdited()
 {
     const int id = treeWidget_timers->currentItem()->data(0, Qt::UserRole).toInt();
     TTimer* pT = mpHost->getTimerUnit()->getTimer(id);
-    if(!pT){
+    if (!pT) {
         return;
     }
     TimerSecondsTextEditedCommand* command = new TimerSecondsTextEditedCommand(mpHost, mpTimersMainArea);
@@ -11177,7 +11177,7 @@ void dlgTriggerEditor::slot_TimerMilliSecondsTextEdited()
 {
     const int id = treeWidget_timers->currentItem()->data(0, Qt::UserRole).toInt();
     TTimer* pT = mpHost->getTimerUnit()->getTimer(id);
-    if(!pT){
+    if (!pT) {
         return;
     }
     TimerMilliSecondsTextEditedCommand* command = new TimerMilliSecondsTextEditedCommand(mpHost, mpTimersMainArea);
