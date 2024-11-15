@@ -1884,6 +1884,9 @@ void AddVarCommand::redo()
                 mpParent = mpItem->parent();
             }
         }
+        if (!mpParent) {
+            return;
+        }
         int count = mpParent->childCount();
         if (mIsFolder) {
             mpParent->addChild(mpItem);
@@ -1923,8 +1926,6 @@ void DeleteVarCommand::undo()
         mpEditor->recurseVariablesDown(mpItem, list);
         for (auto& treeWidgetItem : list) {
             TVar* v = lI->getVarUnit()->getWVar(treeWidgetItem);
-            TVar* vparent = v->getParent();
-            const void* pval = vparent->pValue;
             if (v->getParent()->hidden) {
                 v->setParent(mpTempVar);
             }
