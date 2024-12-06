@@ -262,6 +262,9 @@ void TTreeWidget::rowsInserted(const QModelIndex& parent, int start, int end)
             if (mOldParentID == newParentID) {
                 return;
             }
+            if (!mParentItem) {
+                return;
+            }
             const int m_ParentItemID = mParentItem->data(0, Qt::UserRole).toInt();
             if (newParentID != m_ParentItemID) {
                 mParentItem = mParentItem->parent();
@@ -278,6 +281,9 @@ void TTreeWidget::rowsInserted(const QModelIndex& parent, int start, int end)
             }
         } else if (mIsAliasTree) {
             if (mOldParentID == newParentID) {
+                return;
+            }
+            if (!mParentItem) {
                 return;
             }
             const int m_ParentItemID = mParentItem->data(0, Qt::UserRole).toInt();
@@ -298,6 +304,9 @@ void TTreeWidget::rowsInserted(const QModelIndex& parent, int start, int end)
             if (mOldParentID == newParentID) {
                 return;
             }
+            if (!mParentItem) {
+                return;
+            }
             const int m_ParentItemID = mParentItem->data(0, Qt::UserRole).toInt();
             if (newParentID != m_ParentItemID) {
                 mParentItem = mParentItem->parent();
@@ -314,6 +323,9 @@ void TTreeWidget::rowsInserted(const QModelIndex& parent, int start, int end)
             }
         } else if (mIsTimerTree) {
             if (mOldParentID == newParentID) {
+                return;
+            }
+            if (!mParentItem) {
                 return;
             }
             const int m_ParentItemID = mParentItem->data(0, Qt::UserRole).toInt();
@@ -367,6 +379,9 @@ void TTreeWidget::rowsInserted(const QModelIndex& parent, int start, int end)
             }
         } else if (mIsScriptTree) {
             if (mOldParentID == newParentID) {
+                return;
+            }
+            if (!mParentItem) {
                 return;
             }
             const int m_ParentItemID = mParentItem->data(0, Qt::UserRole).toInt();

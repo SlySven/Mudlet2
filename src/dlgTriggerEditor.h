@@ -80,6 +80,7 @@
 
 class dlgTimersMainArea;
 class dlgSystemMessageArea;
+class dlgPackageExporter;
 class dlgSourceEditorArea;
 class dlgSourceEditorFindArea;
 class dlgTriggersMainArea;
@@ -521,7 +522,7 @@ private:
         {tr("Debug"),      tr("Ctrl+0")}
     };
 
-    std::unordered_map<QLineEdit*, bool> lineEditShouldMarkSpaces;
+    std::unordered_map<SingleLineTextEdit*, bool> lineEditShouldMarkSpaces;
 
     QToolBar* toolBar = nullptr;
     QToolBar* toolBar2 = nullptr;
