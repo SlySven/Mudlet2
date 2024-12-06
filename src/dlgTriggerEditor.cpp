@@ -931,6 +931,11 @@ dlgTriggerEditor::dlgTriggerEditor(Host* pH)
             pItem->singleLineTextEdit_pattern->setEnabled(false);
         }
     }
+
+    connect(mpHost, &Host::signal_editorThemeChanged, this, &dlgTriggerEditor::slot_editorThemeChanged);
+    // fire this now as the theme has already been set and we need the syntax highlighter to pick it up
+    mpHost->editorThemeChanged();
+
     // force the minimum size of the scroll area for the trigger items to be one
     // and a half trigger item widgets:
     const int triggerWidgetItemMinHeight = qRound(mTriggerPatternEdit.at(0)->minimumSizeHint().height() * 1.5);
@@ -941,6 +946,13 @@ dlgTriggerEditor::dlgTriggerEditor(Host* pH)
     showIDLabels(mpHost->showIdsInEditor());
     if (mAutosaveInterval > 0) {
         startTimer(mAutosaveInterval * 1min);
+    }
+}
+
+void dlgTriggerEditor::slot_editorThemeChanged()
+{
+    for (int i = 0; i < 50; i++) {
+        mTriggerPatternEdit.at(i)->singleLineTextEdit_pattern->setTheme(mpHost->mEditorTheme);
     }
 }
 

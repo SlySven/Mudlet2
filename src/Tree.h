@@ -141,9 +141,6 @@ Tree<T>::~Tree()
 {
     while (!mpMyChildrenList->empty()) {
         auto it = mpMyChildrenList->begin();
-        if (it == mpMyChildrenList->end()) {
-            break;
-        }
         T* pChild = *it;
         delete pChild;
     }
