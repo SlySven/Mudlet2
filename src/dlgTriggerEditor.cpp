@@ -4764,7 +4764,6 @@ void dlgTriggerEditor::saveTrigger()
         pT->setName(name);
         pT->setCommand(command);
         pT->setRegexCodeList(patterns, patternKinds);
-qDebug() << "active " << pT->isActive();
         pT->setScript(script);
         pT->setIsMultiline(isMultiline);
         pT->mPerlSlashGOption = mpTriggersMainArea->checkBox_perlSlashGOption->isChecked();
