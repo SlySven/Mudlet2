@@ -752,11 +752,22 @@ void DeleteTimerCommand::undo()
     }
 
     if (mpParent) {
-        const int childID = mpItemTimer->getID();
-        mpItem->setData(0, Qt::UserRole, childID);
-        const int parentID = mpParent->data(0, Qt::UserRole).toInt();
+        QList<QTreeWidgetItem*> childList;
+        mpTreeWidgetTimers->getAllChildren(mpItem, childList);
+        if (mpItemTimerList.size() != childList.size()) {
+            return;
+        }
+        for (int i = 0; i < childList.size(); ++i) {
+            mpItemTimerList[i]->setTemporary(false);
+            mpHost->getTimerUnit()->registerTimer(mpItemTimerList[i]);
+            childList[i]->setData(0, Qt::UserRole, mpItemTimerList[i]->getID());
+        }
         mpParent->insertChild(mSiblingRow, mpItem);
-        mpEditor->selectTimerByID(childID);
+
+        const int itemId = mpItem->data(0, Qt::UserRole).toInt();
+        const int parentId = mpParent->data(0, Qt::UserRole).toInt();
+        mpHost->getTimerUnit()->reParentTimer(itemId, -1, parentId, mParentRow, mSiblingRow);
+        mpEditor->selectTimerByID(itemId);
         mpItem = mpTreeWidgetTimers->currentItem();
     } else {
         qDebug() << "parent is null ";
@@ -2913,6 +2924,7 @@ void TriggerLineEditPatternItemEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
+
     int id = mpItemTrigger->getID();
     mpEditor->selectTriggerByID(id);
     mpItem = mpTreeWidgetTriggers->currentItem();
@@ -2930,6 +2942,7 @@ void TriggerLineEditPatternItemEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
+
     int id = mpItemTrigger->getID();
     mpEditor->selectTriggerByID(id);
     mpItem = mpTreeWidgetTriggers->currentItem();
@@ -2953,8 +2966,10 @@ void TriggerLineEditPatternEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpEditor->slot_triggerSelected(mpItem);
-    mpTreeWidgetTriggers->setCurrentItem(mpItem);
+
+    int id = mpItemTrigger->getID();
+    mpEditor->selectTriggerByID(id);
+    mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggerPattern->singleLineTextEdit_pattern->blockSignals(true);
     mpTriggerPattern->singleLineTextEdit_pattern->setText(mPrevLineEditTriggerPattern);
@@ -2976,8 +2991,10 @@ void TriggerLineEditPatternEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    mpEditor->slot_triggerSelected(mpItem);
-    mpTreeWidgetTriggers->setCurrentItem(mpItem);
+
+    int id = mpItemTrigger->getID();
+    mpEditor->selectTriggerByID(id);
+    mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggerPattern->singleLineTextEdit_pattern->blockSignals(true);
     mpTriggerPattern->singleLineTextEdit_pattern->setText(mLineEditTriggerPattern);

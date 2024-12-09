@@ -1066,7 +1066,6 @@ void dlgTriggerEditor::createUndoView()
     treeWidget_keys->mpUndoStack = undoStack;
     treeWidget_actions->mpUndoStack = undoStack;
     treeWidget_variables->mpUndoStack = undoStack;
-    addDockWidget(Qt::RightDockWidgetArea, undoDockWidget);
 }
 
 void dlgTriggerEditor::writeSettings()
@@ -4765,7 +4764,7 @@ void dlgTriggerEditor::saveTrigger()
         pT->setName(name);
         pT->setCommand(command);
         pT->setRegexCodeList(patterns, patternKinds);
-
+qDebug() << "active " << pT->isActive();
         pT->setScript(script);
         pT->setIsMultiline(isMultiline);
         pT->mPerlSlashGOption = mpTriggersMainArea->checkBox_perlSlashGOption->isChecked();
@@ -4864,9 +4863,11 @@ void dlgTriggerEditor::saveTrigger()
                 }
             }
         }
+        auto state = pT->state();
         if (pT->state()) {
             clearEditorNotification();
-
+            pT->setShouldBeActive(true);
+            pT->setIsActive(pT->activate());
             if (old_name == tr("New trigger") || old_name == tr("New trigger group")) {
                 if (pT->isFolder()) {
                     icon.addPixmap(QPixmap(qsl(":/icons/folder-blue.png")), QIcon::Normal, QIcon::Off);
