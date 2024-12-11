@@ -430,13 +430,13 @@ void DeleteAliasCommand::undo()
 
 void DeleteAliasCommand::redo()
 {
-  if (!mpEditor) {
-    return;
-  }
-  if (!mpHost) {
-    return;
-  }
-  if (mpItem) {
+    if (!mpEditor) {
+        return;
+    }
+    if (!mpHost) {
+        return;
+    }
+    if (mpItem) {
         auto parent = mCurrentIndex.parent();
         auto parentRow = parent.row();
         auto parentId = parent.data(Qt::UserRole).toInt();
@@ -444,19 +444,16 @@ void DeleteAliasCommand::redo()
         mParentRow = parentRow;
         mSiblingRow = siblingRow;
         const int itemId = mpItem->data(0, Qt::UserRole).toInt();
-        TAlias* pItem = mpHost->getAliasUnit()->getAlias(itemId);
-        if(!pItem){
-            return;
-        }
         mpEditor->selectAliasByID(itemId);
         mpItemAliasList.clear();
         recurseAliases(mpItem, mpHost);
         mpEditor->delete_alias();
-  }
+    }
     setText(QObject::tr("Delete alias"));
 }
 
-void DeleteAliasCommand::recurseAliases(QTreeWidgetItem* mpItem, QPointer<Host> mpHost){
+void DeleteAliasCommand::recurseAliases(QTreeWidgetItem* mpItem, QPointer<Host> mpHost)
+{
     TAlias* ptr = nullptr;
     QList<QTreeWidgetItem*> childList;
     mpTreeWidgetAliases->getAllChildren(mpItem, childList);
@@ -557,9 +554,9 @@ void AliasNameTextEditedCommand::redo()
     if (!mpItem) {
         return;
     }
-       int id = mpItemAlias->getID();
-       mpEditor->selectAliasByID(id);
-       mpItem = mpTreeWidgetAliases->currentItem();
+    int id = mpItemAlias->getID();
+    mpEditor->selectAliasByID(id);
+    mpItem = mpTreeWidgetAliases->currentItem();
 
     mpAliasMainArea->lineEdit_alias_name->blockSignals(true);
     mpAliasMainArea->lineEdit_alias_name->setText(mAliasName);
@@ -813,7 +810,8 @@ void DeleteTimerCommand::redo()
     setText(QObject::tr("Delete timer"));
 }
 
-void DeleteTimerCommand::recurseTimers(QTreeWidgetItem* mpItem, QPointer<Host> mpHost){
+void DeleteTimerCommand::recurseTimers(QTreeWidgetItem* mpItem, QPointer<Host> mpHost)
+{
     TTimer* ptr = nullptr;
     QList<QTreeWidgetItem*> childList;
     mpTreeWidgetTimers->getAllChildren(mpItem, childList);
@@ -1620,7 +1618,8 @@ void DeleteKeyCommand::redo()
     setText(QObject::tr("Delete key"));
 }
 
-void DeleteKeyCommand::recurseKeys(QTreeWidgetItem* mpItem, QPointer<Host> mpHost){
+void DeleteKeyCommand::recurseKeys(QTreeWidgetItem* mpItem, QPointer<Host> mpHost)
+{
     TKey* ptr = nullptr;
     QList<QTreeWidgetItem*> childList;
     mpTreeWidgetKeys->getAllChildren(mpItem, childList);
@@ -1862,9 +1861,6 @@ void AddActionCommand::redo()
         TAction* pParent = mpHost->getActionUnit()->getAction(parentId);
         const int id = mpItem->data(0, Qt::UserRole).toInt();
         TAction* pT = mpHost->getActionUnit()->getAction(id);
-        if(!pT){
-            qDebug() << "null";
-        }
         mpItemAction = pT;
         if (mIsFolder) {
             mpParent->addChild(mpItem);
@@ -1998,7 +1994,8 @@ void DeleteActionCommand::redo()
     setText(QObject::tr("Delete action"));
 }
 
-void DeleteActionCommand::recurseActions(QTreeWidgetItem* mpItem, QPointer<Host> mpHost){
+void DeleteActionCommand::recurseActions(QTreeWidgetItem* mpItem, QPointer<Host> mpHost)
+{
     TAction* ptr = nullptr;
     QList<QTreeWidgetItem*> childList;
     mpTreeWidgetActions->getAllChildren(mpItem, childList);
