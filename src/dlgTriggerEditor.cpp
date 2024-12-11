@@ -1066,6 +1066,7 @@ void dlgTriggerEditor::createUndoView()
     treeWidget_keys->mpUndoStack = undoStack;
     treeWidget_actions->mpUndoStack = undoStack;
     treeWidget_variables->mpUndoStack = undoStack;
+    addDockWidget(Qt::RightDockWidgetArea, undoDockWidget);
 }
 
 void dlgTriggerEditor::writeSettings()
