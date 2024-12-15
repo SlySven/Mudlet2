@@ -1066,7 +1066,6 @@ void dlgTriggerEditor::createUndoView()
     treeWidget_keys->mpUndoStack = undoStack;
     treeWidget_actions->mpUndoStack = undoStack;
     treeWidget_variables->mpUndoStack = undoStack;
-    addDockWidget(Qt::RightDockWidgetArea, undoDockWidget);
 }
 
 void dlgTriggerEditor::writeSettings()
@@ -3950,6 +3949,9 @@ void dlgTriggerEditor::deleteAliasCommand()
     if (!pItem) {
         return;
     }
+    if (pItem == mpAliasBaseItem) {
+        return;
+    }
     dlgTriggerEditor* editor = this;
     DeleteAliasCommand* command = new DeleteAliasCommand(mpHost, pItem, treeWidget_aliases);
     command->mpEditor = editor;
@@ -6009,10 +6011,15 @@ void dlgTriggerEditor::undoStackContextMenu()
 {
     undoStackMenu->clear();
     int curIndex = undoStack->index();
+    QList<QString> commandList;
+    for (int i = 0; i < undoStack->count(); ++i) {
+        const QUndoCommand* command = undoStack->command(i);
+        QString text = command->text();
+        commandList.insert(i, text);
+    }
     for (int i = 0; i <= undoStack->count(); i++) {
-        undoStack->setIndex(i);
         QAction* undo = new QAction(this);
-        QString undoText = undoStack->undoText().isEmpty() ? "<empty>" : undoStack->undoText();
+        QString undoText = i == 0 ? "<empty>" : commandList[i - 1];
         if (curIndex == i) {
             undo->setEnabled(false);
         }
@@ -6020,28 +6027,28 @@ void dlgTriggerEditor::undoStackContextMenu()
         connect(undo, &QAction::triggered, this, [=]() -> void { dlgTriggerEditor::slot_undoAction(i); });
         undoStackMenu->addAction(undo);
     }
-    undoStack->setIndex(curIndex);
 }
 
 void dlgTriggerEditor::redoStackContextMenu()
 {
     redoStackMenu->clear();
     int curIndex = undoStack->index();
-    for (int i = 0; i <= undoStack->count(); i++) {
-        undoStack->setIndex(i);
-        if (undoStack->redoText().isEmpty()) {
-            continue;
-        }
+    QList<QString> commandList;
+    for (int i = 0; i < undoStack->count(); ++i) {
+        const QUndoCommand* command = undoStack->command(i);
+        QString text = command->text();
+        commandList.insert(i, text);
+    }
+    for (int i = 1; i <= undoStack->count(); i++) {
         QAction* redo = new QAction(this);
-        QString redoText = undoStack->redoText().isEmpty() ? "<empty>" : undoStack->redoText();
-        if (curIndex - 1 == i) {
+        QString redoText = commandList[i - 1];
+        if (curIndex - 1 == i - 1) {
             redo->setEnabled(false);
         }
         redo->setText(redoText);
-        connect(redo, &QAction::triggered, this, [=]() -> void { dlgTriggerEditor::slot_redoAction(i); });
+        connect(redo, &QAction::triggered, this, [=]() -> void { dlgTriggerEditor::slot_redoAction(i - 1); });
         redoStackMenu->addAction(redo);
     }
-    undoStack->setIndex(curIndex);
 }
 
 void dlgTriggerEditor::slot_undoStackIndexChanged(int idx)
@@ -6111,7 +6118,9 @@ void dlgTriggerEditor::slot_redoAction(int idx)
         undoStackMenu->setEnabled(true);
     }
 }
-
+void dlgTriggerEditor::slot_cleanChanged(bool clean){
+    qDebug() << clean;
+}
 void dlgTriggerEditor::slot_triggerLinePatternItemEdited(int i)
 {
     QTreeWidgetItem* mpItem = treeWidget_triggers->currentItem();
@@ -6217,6 +6226,11 @@ void dlgTriggerEditor::slot_triggerSelected(QTreeWidgetItem* pItem)
     mpTriggersMainArea->spinBox_lineMargin->setValue(-1);
     mpTriggersMainArea->spinBox_lineMargin->blockSignals(false);
     const int ID = pItem->data(0, Qt::UserRole).toInt();
+    if(pItem->parent())
+    {
+        auto pParent = pItem->parent();
+        const int parentId = pParent->data(0, Qt::UserRole).toInt();
+    }
     TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(ID);
     if (pT) {
         const QStringList patternList = pT->getPatternsList();
@@ -9679,10 +9693,12 @@ void dlgTriggerEditor::slot_pasteXml()
         if (pItem == mpTriggerBaseItem) {
             return;
         }
-        PasteTriggerCommand* command = new PasteTriggerCommand(mpHost, treeWidget_triggers);
-        command->mpEditor = this;
-        command->mImportedItemID = importedItemID;
-        undoStack->push(command);
+
+        // PasteTriggerCommand* command = new PasteTriggerCommand(mpHost, treeWidget_triggers);
+        // command->mpEditor = this;
+        // command->mImportedItemID = importedItemID;
+        // command->mpParent = pItem->parent();
+        // undoStack->push(command);
         break;
     }
     case EditorViewType::cmTimerView: {
@@ -9693,10 +9709,10 @@ void dlgTriggerEditor::slot_pasteXml()
         if (pItem == mpTimerBaseItem) {
             return;
         }
-        PasteTimerCommand* command = new PasteTimerCommand(mpHost, treeWidget_timers);
-        command->mpEditor = this;
-        command->mImportedItemID = importedItemID;
-        undoStack->push(command);
+        // PasteTimerCommand* command = new PasteTimerCommand(mpHost, treeWidget_timers);
+        // command->mpEditor = this;
+        // command->mImportedItemID = importedItemID;
+        // undoStack->push(command);
         break;
     }
     case EditorViewType::cmAliasView: {
@@ -9707,10 +9723,10 @@ void dlgTriggerEditor::slot_pasteXml()
         if (pItem == mpAliasBaseItem) {
             return;
         }
-        PasteAliasCommand* command = new PasteAliasCommand(mpHost, treeWidget_aliases);
-        command->mpEditor = this;
-        command->mImportedItemID = importedItemID;
-        undoStack->push(command);
+        // PasteAliasCommand* command = new PasteAliasCommand(mpHost, treeWidget_aliases);
+        // command->mpEditor = this;
+        // command->mImportedItemID = importedItemID;
+        // undoStack->push(command);
         break;
     }
     case EditorViewType::cmScriptView: {
@@ -9721,10 +9737,10 @@ void dlgTriggerEditor::slot_pasteXml()
         if (pItem == mpScriptsBaseItem) {
             return;
         }
-        PasteScriptCommand* command = new PasteScriptCommand(mpHost, treeWidget_scripts);
-        command->mpEditor = this;
-        command->mImportedItemID = importedItemID;
-        undoStack->push(command);
+        // PasteScriptCommand* command = new PasteScriptCommand(mpHost, treeWidget_scripts);
+        // command->mpEditor = this;
+        // command->mImportedItemID = importedItemID;
+        // undoStack->push(command);
         break;
     }
     case EditorViewType::cmActionView: {
@@ -9735,10 +9751,10 @@ void dlgTriggerEditor::slot_pasteXml()
         if (pItem == mpActionBaseItem) {
             return;
         }
-        PasteActionCommand* command = new PasteActionCommand(mpHost, treeWidget_actions);
-        command->mpEditor = this;
-        command->mImportedItemID = importedItemID;
-        undoStack->push(command);
+        // PasteActionCommand* command = new PasteActionCommand(mpHost, treeWidget_actions);
+        // command->mpEditor = this;
+        // command->mImportedItemID = importedItemID;
+        // undoStack->push(command);
         break;
     }
     case EditorViewType::cmKeysView: {
@@ -9749,10 +9765,10 @@ void dlgTriggerEditor::slot_pasteXml()
         if (pItem == mpKeyBaseItem) {
             return;
         }
-        PasteKeyCommand* command = new PasteKeyCommand(mpHost, treeWidget_keys);
-        command->mpEditor = this;
-        command->mImportedItemID = importedItemID;
-        undoStack->push(command);
+        // PasteKeyCommand* command = new PasteKeyCommand(mpHost, treeWidget_keys);
+        // command->mpEditor = this;
+        // command->mImportedItemID = importedItemID;
+        // undoStack->push(command);
         break;
     }
     case EditorViewType::cmVarsView:
@@ -9773,19 +9789,36 @@ void dlgTriggerEditor::slot_pasteXml()
         // off animation temporarily
         auto animated = treeWidget_triggers->isAnimated();
         treeWidget_triggers->setAnimated(false);
-        selectTriggerByID(importedItemID);
+        // selectTriggerByID(importedItemID);
         treeWidget_triggers->setAnimated(animated);
-
+        QTreeWidgetItem* pItem = treeWidget_triggers->currentItem();
+        if (!pItem) {
+            return;
+        }
+        PasteTriggerCommand* command = new PasteTriggerCommand(mpHost, treeWidget_triggers);
+        command->mpEditor = this;
+        command->mpParent = pItem->parent();
+        command->mImportedItemID = importedItemID;
+        undoStack->push(command);
         // set the focus because hiding checkBox_displayAllVariables in changeView
         // changes the focus to the search box for some reason. This thus breaks
         // successive pastes because you'll now be pasting into the search box
         treeWidget_triggers->setFocus();
+
         break;
     }
     case EditorViewType::cmTimerView: {
         auto animated = treeWidget_timers->isAnimated();
         treeWidget_timers->setAnimated(false);
-        selectTimerByID(importedItemID);
+        QTreeWidgetItem* pItem = treeWidget_timers->currentItem();
+        if (!pItem) {
+            return;
+        }
+        PasteTimerCommand* command = new PasteTimerCommand(mpHost, treeWidget_timers);
+        command->mpEditor = this;
+        command->mpParent = pItem->parent();
+        command->mImportedItemID = importedItemID;
+        undoStack->push(command);
         treeWidget_timers->setAnimated(animated);
         treeWidget_timers->setFocus();
         break;
@@ -9793,7 +9826,15 @@ void dlgTriggerEditor::slot_pasteXml()
     case EditorViewType::cmAliasView: {
         auto animated = treeWidget_aliases->isAnimated();
         treeWidget_aliases->setAnimated(false);
-        selectAliasByID(importedItemID);
+        QTreeWidgetItem* pItem = treeWidget_aliases->currentItem();
+        if (!pItem) {
+            return;
+        }
+        PasteAliasCommand* command = new PasteAliasCommand(mpHost, treeWidget_aliases);
+        command->mpEditor = this;
+        command->mpParent = pItem->parent();
+        command->mImportedItemID = importedItemID;
+        undoStack->push(command);
         treeWidget_aliases->setAnimated(animated);
         treeWidget_aliases->setFocus();
         break;
@@ -9801,7 +9842,15 @@ void dlgTriggerEditor::slot_pasteXml()
     case EditorViewType::cmScriptView: {
         auto animated = treeWidget_scripts->isAnimated();
         treeWidget_scripts->setAnimated(false);
-        selectScriptByID(importedItemID);
+        QTreeWidgetItem* pItem = treeWidget_scripts->currentItem();
+        if (!pItem) {
+            return;
+        }
+        PasteScriptCommand* command = new PasteScriptCommand(mpHost, treeWidget_scripts);
+        command->mpEditor = this;
+        command->mpParent = pItem->parent();
+        command->mImportedItemID = importedItemID;
+        undoStack->push(command);
         treeWidget_scripts->setAnimated(animated);
         treeWidget_scripts->setFocus();
         break;
@@ -9809,7 +9858,15 @@ void dlgTriggerEditor::slot_pasteXml()
     case EditorViewType::cmActionView: {
         auto animated = treeWidget_actions->isAnimated();
         treeWidget_actions->setAnimated(false);
-        selectActionByID(importedItemID);
+        QTreeWidgetItem* pItem = treeWidget_actions->currentItem();
+        if (!pItem) {
+            return;
+        }
+        PasteActionCommand* command = new PasteActionCommand(mpHost, treeWidget_actions);
+        command->mpEditor = this;
+        command->mpParent = pItem->parent();
+        command->mImportedItemID = importedItemID;
+        undoStack->push(command);
         treeWidget_actions->setAnimated(animated);
         treeWidget_actions->setFocus();
         break;
@@ -9817,7 +9874,15 @@ void dlgTriggerEditor::slot_pasteXml()
     case EditorViewType::cmKeysView: {
         auto animated = treeWidget_keys->isAnimated();
         treeWidget_keys->setAnimated(false);
-        selectKeyByID(importedItemID);
+        QTreeWidgetItem* pItem = treeWidget_keys->currentItem();
+        if (!pItem) {
+            return;
+        }
+        PasteKeyCommand* command = new PasteKeyCommand(mpHost, treeWidget_keys);
+        command->mpEditor = this;
+        command->mpParent = pItem->parent();
+        command->mImportedItemID = importedItemID;
+        undoStack->push(command);
         treeWidget_keys->setAnimated(animated);
         treeWidget_keys->setFocus();
         break;
@@ -11143,16 +11208,10 @@ void dlgTriggerEditor::slot_AliasNameTextEdited()
     if (mPrevAliasName == mpAliasMainArea->lineEdit_alias_name->text()) {
         return;
     }
-    const int aliasID = treeWidget_aliases->currentItem()->data(0, Qt::UserRole).toInt();
-    TAlias* pT = mpHost->getAliasUnit()->getAlias(aliasID);
-    if (!pT) {
-        return;
-    }
     AliasNameTextEditedCommand* command = new AliasNameTextEditedCommand(mpHost, mpAliasMainArea);
     command->mpEditor = this;
     command->mpItem = treeWidget_aliases->currentItem();
     command->mpTreeWidgetAliases = treeWidget_aliases;
-    command->mpItemAlias = pT;
     command->mpAliasMainArea = mpAliasMainArea;
     command->mPrevAliasName = mPrevAliasName;
     command->mAliasName = mpAliasMainArea->lineEdit_alias_name->text();
@@ -11165,17 +11224,11 @@ void dlgTriggerEditor::slot_AliasCommandTextEdited()
     if (mPrevAliasCommand == mpAliasMainArea->lineEdit_alias_command->text()) {
         return;
     }
-    const int aliasID = treeWidget_aliases->currentItem()->data(0, Qt::UserRole).toInt();
-    TAlias* pT = mpHost->getAliasUnit()->getAlias(aliasID);
-    if (!pT) {
-        return;
-    }
     AliasCommandTextEditedCommand* command = new AliasCommandTextEditedCommand(mpHost, mpAliasMainArea);
     command->mpEditor = this;
     command->mpItem = treeWidget_aliases->currentItem();
     command->mpTreeWidgetAliases = treeWidget_aliases;
     command->mpAliasMainArea = mpAliasMainArea;
-    command->mpItemAlias = pT;
     command->mPrevAliasCommand = mPrevAliasCommand;
     command->mAliasCommand = mpAliasMainArea->lineEdit_alias_command->text();
     undoStack->push(command);
@@ -11187,16 +11240,10 @@ void dlgTriggerEditor::slot_AliasPatternTextEdited()
     if (mPrevAliasPattern == mpAliasMainArea->lineEdit_alias_pattern->text()) {
         return;
     }
-    const int aliasID = treeWidget_aliases->currentItem()->data(0, Qt::UserRole).toInt();
-    TAlias* pT = mpHost->getAliasUnit()->getAlias(aliasID);
-    if (!pT) {
-        return;
-    }
     AliasPatternTextEditedCommand* command = new AliasPatternTextEditedCommand(mpHost, mpAliasMainArea);
     command->mpEditor = this;
     command->mpItem = treeWidget_aliases->currentItem();
     command->mpTreeWidgetAliases = treeWidget_aliases;
-    command->mpItemAlias = pT;
     command->mpAliasMainArea = mpAliasMainArea;
     command->mPrevAliasPattern = mPrevAliasPattern;
     command->mAliasPattern = mpAliasMainArea->lineEdit_alias_pattern->text();

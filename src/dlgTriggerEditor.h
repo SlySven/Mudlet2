@@ -590,6 +590,7 @@ private:
     void redoStackContextMenu();
     void slot_undoAction(int idx);
     void slot_redoAction(int idx);
+    void slot_cleanChanged(bool);
     void slot_undo();
     void slot_redo();
     QUndoStack* undoStack = nullptr;
