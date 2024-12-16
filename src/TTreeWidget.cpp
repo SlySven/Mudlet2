@@ -270,6 +270,7 @@ void TTreeWidget::rowsInserted(const QModelIndex& parent, int start, int end)
                 mParentItem = mParentItem->parent();
             }
             MoveTriggerCommand* command = new MoveTriggerCommand(mpHost, this, mChildID, mOldParentID, newParentID, parentPosition, childPosition, mPrevParentPosition, mPrevChildPosition);
+            command->mpEditor = mpHost->mpEditorDialog;
             command->mParent = parent;
             command->mStart = start;
             command->mEnd = end;
@@ -291,6 +292,7 @@ void TTreeWidget::rowsInserted(const QModelIndex& parent, int start, int end)
                 mParentItem = mParentItem->parent();
             }
             MoveAliasCommand* command = new MoveAliasCommand(mpHost, this, mChildID, mOldParentID, newParentID, parentPosition, childPosition, mPrevParentPosition, mPrevChildPosition);
+            command->mpEditor = mpHost->mpEditorDialog;
             command->mParent = parent;
             command->mStart = start;
             command->mEnd = end;
@@ -312,6 +314,7 @@ void TTreeWidget::rowsInserted(const QModelIndex& parent, int start, int end)
                 mParentItem = mParentItem->parent();
             }
             MoveKeyCommand* command = new MoveKeyCommand(mpHost, this, mChildID, mOldParentID, newParentID, parentPosition, childPosition, mPrevParentPosition, mPrevChildPosition);
+            command->mpEditor = mpHost->mpEditorDialog;
             command->mParent = parent;
             command->mStart = start;
             command->mEnd = end;
@@ -333,6 +336,7 @@ void TTreeWidget::rowsInserted(const QModelIndex& parent, int start, int end)
                 mParentItem = mParentItem->parent();
             }
             MoveTimerCommand* command = new MoveTimerCommand(mpHost, this, mChildID, mOldParentID, newParentID, parentPosition, childPosition, mPrevParentPosition, mPrevChildPosition);
+            command->mpEditor = mpHost->mpEditorDialog;
             command->mpHost = mpHost;
             command->mParent = parent;
             command->mStart = start;
@@ -346,7 +350,22 @@ void TTreeWidget::rowsInserted(const QModelIndex& parent, int start, int end)
             TTimer* pTChild = mpHost->getTimerUnit()->getTimer(mChildID);
             if (pTChild) {
                 QIcon icon;
-                if (pTChild->isOffsetTimer()) {
+                if (pTChild->isFolder()) {
+                    const bool itemActive = (pTChild->isActive() || pTChild->shouldBeActive());
+                    if (itemActive) {
+                        if (pTChild->ancestorsActive()) {
+                            icon.addPixmap(QPixmap(qsl(":/icons/folder-green.png")), QIcon::Normal, QIcon::Off);
+                        } else {
+                            icon.addPixmap(QPixmap(qsl(":/icons/folder-grey.png")), QIcon::Normal, QIcon::Off);
+                        }
+                    } else {
+                        if (pTChild->ancestorsActive()) {
+                            icon.addPixmap(QPixmap(qsl(":/icons/folder-green-locked.png")), QIcon::Normal, QIcon::Off);
+                        } else {
+                            icon.addPixmap(QPixmap(qsl(":/icons/folder-grey-locked.png")), QIcon::Normal, QIcon::Off);
+                        }
+                    }
+                } else if (pTChild->isOffsetTimer()) {
                     if (pTChild->shouldBeActive()) {
                         icon.addPixmap(QPixmap(qsl(":/icons/offsettimer-on.png")), QIcon::Normal, QIcon::Off);
                     } else {
@@ -389,6 +408,7 @@ void TTreeWidget::rowsInserted(const QModelIndex& parent, int start, int end)
                 mParentItem = mParentItem->parent();
             }
             MoveScriptCommand* command = new MoveScriptCommand(mpHost, this, mChildID, mOldParentID, newParentID, parentPosition, childPosition, mPrevParentPosition, mPrevChildPosition);
+            command->mpEditor = mpHost->mpEditorDialog;
             command->mpHost = mpHost;
             command->mParent = parent;
             command->mStart = start;
@@ -408,6 +428,7 @@ void TTreeWidget::rowsInserted(const QModelIndex& parent, int start, int end)
                 mParentItem = mParentItem->parent();
             }
             MoveActionCommand* command = new MoveActionCommand(mpHost, this, mChildID, mOldParentID, newParentID, parentPosition, childPosition, mPrevParentPosition, mPrevChildPosition);
+            command->mpEditor = mpHost->mpEditorDialog;
             command->mParent = parent;
             command->mStart = start;
             command->mEnd = end;

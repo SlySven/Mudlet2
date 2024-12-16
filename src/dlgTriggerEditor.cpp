@@ -3937,6 +3937,9 @@ void dlgTriggerEditor::deleteScriptCommand()
     if (!pItem) {
         return;
     }
+    if (pItem == mpScriptsBaseItem) {
+        return;
+    }
     dlgTriggerEditor* editor = this;
     DeleteScriptCommand* command = new DeleteScriptCommand(mpHost, pItem, treeWidget_scripts);
     command->mpEditor = editor;
@@ -3948,6 +3951,9 @@ void dlgTriggerEditor::deleteKeyCommand()
 {
     QTreeWidgetItem* pItem = treeWidget_keys->currentItem();
     if (!pItem) {
+        return;
+    }
+    if (pItem == mpKeyBaseItem) {
         return;
     }
     dlgTriggerEditor* editor = this;
@@ -4038,6 +4044,9 @@ void dlgTriggerEditor::deleteTimerCommand()
 {
     QTreeWidgetItem* pItem = treeWidget_timers->currentItem();
     if (!pItem) {
+        return;
+    }
+    if (pItem == mpTimerBaseItem) {
         return;
     }
     dlgTriggerEditor* editor = this;
@@ -11641,14 +11650,14 @@ void dlgTriggerEditor::checkForMoreThanOneTriggerItem()
     for (qsizetype i = 0, total = pLayout->count(); i < total; ++i) {
         auto pLayoutItem = pLayout->itemAt(i)->widget();
         if (pLayoutItem) {
-            auto* pLineEdit_pattern = pLayoutItem->findChild<QLineEdit*>(qsl("singleLineTextEdit_pattern"));
+            auto* pLineEdit_pattern = pLayoutItem->findChild<SingleLineTextEdit*>(qsl("singleLineTextEdit_pattern"));
             auto* pComboBox_type = pLayoutItem->findChild<QComboBox*>(qsl("comboBox_patternType"));
             if (pComboBox_type && (pComboBox_type->currentIndex() == REGEX_PROMPT || pComboBox_type->currentIndex() == REGEX_LINE_SPACER)) {
                 // These automatically counts as an active item - though if there
                 // isn't any GA signals the first won't work...
                 ++activeItems;
             } else {
-                if (pLineEdit_pattern && !pLineEdit_pattern->text().isEmpty()) {
+                if (pLineEdit_pattern && !pLineEdit_pattern->toPlainText().isEmpty()) {
                     ++activeItems;
                 }
             }

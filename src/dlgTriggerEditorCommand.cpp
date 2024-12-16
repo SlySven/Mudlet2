@@ -23,13 +23,9 @@ void AddTriggerCommand::undo()
     if (!mpItem) {
         return;
     }
-    int itemId = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(itemId);
-    mpItem = mpTreeWidgetTriggers->currentItem();
-    const int id = mpItem->data(0, Qt::UserRole).toInt();
-    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(id);
-    mpItemTrigger = pT;
 
+    mpEditor->selectTriggerByID(mItemID);
+    mpItem = mpTreeWidgetTriggers->currentItem();
     mpParent = mpItem->parent();
 
     if (mpParent) {
@@ -37,7 +33,8 @@ void AddTriggerCommand::undo()
         const int parentId = mpParent->data(0, Qt::UserRole).toInt();
         TTrigger* pParent = mpHost->getTriggerUnit()->getTrigger(parentId);
         if (pParent) {
-            pParent->popChild(mpItemTrigger);
+            TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(mItemID);
+            pParent->popChild(pT);
         }
     } else {
         qDebug() << "parent is null ";
@@ -55,26 +52,22 @@ void AddTriggerCommand::redo()
         mCurrentIndex = mpTreeWidgetTriggers->currentIndex();
         mSiblingRow = mCurrentIndex.row();
         mpParent = mpItem->parent();
-        const int id = mpItem->data(0, Qt::UserRole).toInt();
-        TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(id);
-        mpItemTrigger = pT;
+        mItemID = mpItem->data(0, Qt::UserRole).toInt();
 
     } else {
         const int parentId = mpParent->data(0, Qt::UserRole).toInt();
         TTrigger* pParent = mpHost->getTriggerUnit()->getTrigger(parentId);
-        const int id = mpItem->data(0, Qt::UserRole).toInt();
-        TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(id);
-        mpItemTrigger = pT;
         if (mIsFolder) {
             mpParent->addChild(mpItem);
         } else {
             mpParent->insertChild(mSiblingRow, mpItem);
         }
         if (pParent) {
-            pParent->addChild(mpItemTrigger);
+            TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(mItemID);
+            pParent->addChild(pT);
         }
 
-        mpEditor->selectTriggerByID(id);
+        mpEditor->selectTriggerByID(mItemID);
     }
 
     setText(QObject::tr("Add Trigger"));
@@ -94,15 +87,14 @@ void PasteTriggerCommand::undo()
 
     mpEditor->selectTriggerByID(mImportedItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
-    TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(mImportedItemID);
-    mpItemTrigger = pT;
     mpParent = mpItem->parent();
     if (mpParent) {
         mpParent->removeChild(mpItem);
         const int parentId = mpParent->data(0, Qt::UserRole).toInt();
         TTrigger* pParent = mpHost->getTriggerUnit()->getTrigger(parentId);
         if (pParent) {
-            pParent->popChild(mpItemTrigger);
+            TTrigger* pT = mpHost->getTriggerUnit()->getTrigger(mImportedItemID);
+            pParent->popChild(pT);
         }
     } else {
         qDebug() << "parent is null ";
@@ -274,21 +266,36 @@ void MoveTriggerCommand::undo()
         return;
     }
 
+    mpEditor->selectTriggerByID(mItemID);
+    mpItem = mpTreeWidgetTriggers->currentItem();
+
+    mpEditor->selectTriggerByID(mOldParentID);
+    mpPrevParentItem = mpTreeWidgetTriggers->currentItem();
+
+    mpEditor->selectTriggerByID(mNewParentID);
+    mpParentItem = mpTreeWidgetTriggers->currentItem();
+
     mpHost->getTriggerUnit()->reParentTrigger(mChildID, mNewParentID, mOldParentID, mPrevParentPosition, mPrevChildPosition);
     mpParentItem->removeChild(mpItem);
-    mpPrevParentItem->insertChild(mpPrevParentItem->childCount() <= 0 ? 0 : mpParentItem->childCount(), mpItem);
+
+    mpPrevParentItem->insertChild(mPrevChildPosition, mpItem);
+
     mpTreeWidgetTriggers->setCurrentItem(mpItem);
 }
 
 void MoveTriggerCommand::redo()
 {
+    if(!mpEditor){
+        return;
+    }
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
     mpHost->getTriggerUnit()->reParentTrigger(mChildID, mOldParentID, mNewParentID, mParentPosition, mChildPosition);
     if (mpPrevParentItem) {
         mpPrevParentItem->removeChild(mpItem);
     }
     if (mpParentItem) {
         const int count = mpParentItem->childCount();
-        mpParentItem->insertChild(count <= 0 ? 0 : count, mpItem);
+        mpParentItem->insertChild(mChildPosition, mpItem);
     }
 
     setText(QObject::tr("Move trigger"));
@@ -536,14 +543,29 @@ void MoveAliasCommand::undo()
         return;
     }
 
+    mpEditor->selectAliasByID(mItemID);
+    mpItem = mpTreeWidgetAliases->currentItem();
+
+    mpEditor->selectAliasByID(mOldParentID);
+    mpPrevParentItem = mpTreeWidgetAliases->currentItem();
+
+    mpEditor->selectAliasByID(mNewParentID);
+    mpParentItem = mpTreeWidgetAliases->currentItem();
+
     mpHost->getAliasUnit()->reParentAlias(mChildID, mNewParentID, mOldParentID, mPrevParentPosition, mPrevChildPosition);
     mpParentItem->removeChild(mpItem);
-    mpPrevParentItem->insertChild(mpPrevParentItem->childCount() <= 0 ? 0 : mpPrevParentItem->childCount(), mpItem);
+
+    mpPrevParentItem->insertChild(mPrevChildPosition, mpItem);
+
     mpTreeWidgetAliases->setCurrentItem(mpItem);
 }
 
 void MoveAliasCommand::redo()
 {
+    if(!mpEditor){
+        return;
+    }
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
     mpHost->getAliasUnit()->reParentAlias(mChildID, mOldParentID, mNewParentID, mParentPosition, mChildPosition);
     if (mpPrevParentItem) {
         mpPrevParentItem->removeChild(mpItem);
@@ -906,14 +928,29 @@ void MoveTimerCommand::undo()
         return;
     }
 
+    mpEditor->selectTimerByID(mItemID);
+    mpItem = mpTreeWidgetTimers->currentItem();
+
+    mpEditor->selectTimerByID(mOldParentID);
+    mpPrevParentItem = mpTreeWidgetTimers->currentItem();
+
+    mpEditor->selectTimerByID(mNewParentID);
+    mpParentItem = mpTreeWidgetTimers->currentItem();
+
     mpHost->getTimerUnit()->reParentTimer(mChildID, mNewParentID, mOldParentID, mPrevParentPosition, mPrevChildPosition);
     mpParentItem->removeChild(mpItem);
-    mpPrevParentItem->insertChild(mpPrevParentItem->childCount() <= 0 ? 0 : mpPrevParentItem->childCount(), mpItem);
+
+    mpPrevParentItem->insertChild(mPrevChildPosition, mpItem);
+
     mpTreeWidgetTimers->setCurrentItem(mpItem);
 }
 
 void MoveTimerCommand::redo()
 {
+    if(!mpEditor){
+        return;
+    }
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
     mpHost->getTimerUnit()->reParentTimer(mChildID, mOldParentID, mNewParentID, mParentPosition, mChildPosition);
     if (mpPrevParentItem) {
         mpPrevParentItem->removeChild(mpItem);
@@ -1378,14 +1415,29 @@ void MoveScriptCommand::undo()
         return;
     }
 
+    mpEditor->selectScriptByID(mItemID);
+    mpItem = mpTreeWidgetScripts->currentItem();
+
+    mpEditor->selectScriptByID(mOldParentID);
+    mpPrevParentItem = mpTreeWidgetScripts->currentItem();
+
+    mpEditor->selectScriptByID(mNewParentID);
+    mpParentItem = mpTreeWidgetScripts->currentItem();
+
     mpHost->getScriptUnit()->reParentScript(mChildID, mNewParentID, mOldParentID, mPrevParentPosition, mPrevChildPosition);
     mpParentItem->removeChild(mpItem);
-    mpPrevParentItem->insertChild(mpPrevParentItem->childCount() <= 0 ? 0 : mpPrevParentItem->childCount(), mpItem);
+
+    mpPrevParentItem->insertChild(mPrevChildPosition, mpItem);
+
     mpTreeWidgetScripts->setCurrentItem(mpItem);
 }
 
 void MoveScriptCommand::redo()
 {
+    if(!mpEditor){
+        return;
+    }
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
     mpHost->getScriptUnit()->reParentScript(mChildID, mOldParentID, mNewParentID, mParentPosition, mChildPosition);
     if (mpPrevParentItem) {
         mpPrevParentItem->removeChild(mpItem);
@@ -1408,8 +1460,8 @@ void ScriptNameTextEditedCommand::undo()
     if (!mpItem) {
         return;
     }
-    int id = mpItemScript->getID();
-    mpEditor->selectScriptByID(id);
+
+    mpEditor->selectScriptByID(mItemID);
     mpItem = mpTreeWidgetScripts->currentItem();
 
     mpScriptsMainArea->lineEdit_script_name->setText(mPrevScriptName);
@@ -1421,8 +1473,8 @@ void ScriptNameTextEditedCommand::redo()
     if (!mpItem) {
         return;
     }
-    int id = mpItemScript->getID();
-    mpEditor->selectScriptByID(id);
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
+    mpEditor->selectScriptByID(mItemID);
     mpItem = mpTreeWidgetScripts->currentItem();
 
     mpScriptsMainArea->lineEdit_script_name->setText(mScriptName);
@@ -1745,14 +1797,29 @@ void MoveKeyCommand::undo()
         return;
     }
 
+    mpEditor->selectKeyByID(mItemID);
+    mpItem = mpTreeWidgetKeys->currentItem();
+
+    mpEditor->selectKeyByID(mOldParentID);
+    mpPrevParentItem = mpTreeWidgetKeys->currentItem();
+
+    mpEditor->selectKeyByID(mNewParentID);
+    mpParentItem = mpTreeWidgetKeys->currentItem();
+
     mpHost->getKeyUnit()->reParentKey(mChildID, mNewParentID, mOldParentID, mPrevParentPosition, mPrevChildPosition);
     mpParentItem->removeChild(mpItem);
-    mpPrevParentItem->insertChild(mpPrevParentItem->childCount() <= 0 ? 0 : mpPrevParentItem->childCount(), mpItem);
+
+    mpPrevParentItem->insertChild(mPrevChildPosition, mpItem);
+
     mpTreeWidgetKeys->setCurrentItem(mpItem);
 }
 
 void MoveKeyCommand::redo()
 {
+    if(!mpEditor){
+        return;
+    }
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
     mpHost->getKeyUnit()->reParentKey(mChildID, mOldParentID, mNewParentID, mParentPosition, mChildPosition);
     if (mpPrevParentItem) {
         mpPrevParentItem->removeChild(mpItem);
@@ -2134,15 +2201,29 @@ void MoveActionCommand::undo()
         return;
     }
 
+    mpEditor->selectActionByID(mItemID);
+    mpItem = mpTreeWidgetActions->currentItem();
+
+    mpEditor->selectActionByID(mOldParentID);
+    mpPrevParentItem = mpTreeWidgetActions->currentItem();
+
+    mpEditor->selectActionByID(mNewParentID);
+    mpParentItem = mpTreeWidgetActions->currentItem();
+
     mpHost->getActionUnit()->reParentAction(mChildID, mNewParentID, mOldParentID, mPrevParentPosition, mPrevChildPosition);
     mpParentItem->removeChild(mpItem);
-    mpPrevParentItem->insertChild(mpPrevParentItem->childCount() <= 0 ? 0 : mpPrevParentItem->childCount(), mpItem);
+
+    mpPrevParentItem->insertChild(mPrevChildPosition, mpItem);
+
     mpTreeWidgetActions->setCurrentItem(mpItem);
-    mpHost->getActionUnit()->updateToolbar();
 }
 
 void MoveActionCommand::redo()
 {
+    if(!mpEditor){
+        return;
+    }
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
     mpHost->getActionUnit()->reParentAction(mChildID, mOldParentID, mNewParentID, mParentPosition, mChildPosition);
     if (mpPrevParentItem) {
         mpPrevParentItem->removeChild(mpItem);
@@ -2582,8 +2663,7 @@ void TriggerNameTextEditedCommand::undo()
         return;
     }
 
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpEditor->slot_triggerSelected(mpItem);
@@ -2598,8 +2678,8 @@ void TriggerNameTextEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->lineEdit_trigger_name->blockSignals(true);
@@ -2619,8 +2699,8 @@ void TriggerCommandTextEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->lineEdit_trigger_command->setText(mPrevLineEditTriggerCommand);
@@ -2632,8 +2712,8 @@ void TriggerCommandTextEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpEditor->slot_triggerSelected(mpItem);
@@ -2652,8 +2732,8 @@ void TriggerFireLengthEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->spinBox_stayOpen->blockSignals(true);
@@ -2667,8 +2747,8 @@ void TriggerFireLengthEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->spinBox_stayOpen->blockSignals(true);
@@ -2688,8 +2768,8 @@ void TriggerPlaySoundEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->groupBox_soundTrigger->blockSignals(true);
@@ -2703,8 +2783,8 @@ void TriggerPlaySoundEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->groupBox_soundTrigger->blockSignals(true);
@@ -2724,8 +2804,8 @@ void TriggerPlaySoundFileEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->lineEdit_soundFile->blockSignals(true);
@@ -2739,8 +2819,8 @@ void TriggerPlaySoundFileEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->lineEdit_soundFile->blockSignals(true);
@@ -2760,8 +2840,8 @@ void TriggerColorizerEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->groupBox_triggerColorizer->blockSignals(true);
@@ -2775,8 +2855,8 @@ void TriggerColorizerEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->groupBox_triggerColorizer->blockSignals(true);
@@ -2796,8 +2876,8 @@ void TriggerColorizerBgColorEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->pushButtonBgColor->blockSignals(true);
@@ -2814,8 +2894,8 @@ void TriggerColorizerBgColorEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->pushButtonBgColor->blockSignals(true);
@@ -2838,8 +2918,8 @@ void TriggerColorizerFgColorEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->pushButtonFgColor->blockSignals(true);
@@ -2856,8 +2936,8 @@ void TriggerColorizerFgColorEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->pushButtonFgColor->blockSignals(true);
@@ -2880,8 +2960,8 @@ void TriggerPerlSlashGOptionEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->checkBox_perlSlashGOption->blockSignals(true);
@@ -2895,8 +2975,8 @@ void TriggerPerlSlashGOptionEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->checkBox_perlSlashGOption->blockSignals(true);
@@ -2916,8 +2996,8 @@ void TriggerGroupFilterEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->checkBox_filterTrigger->blockSignals(true);
@@ -2931,8 +3011,8 @@ void TriggerGroupFilterEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->checkBox_filterTrigger->blockSignals(true);
@@ -2952,8 +3032,8 @@ void TriggerMultiLineEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->groupBox_multiLineTrigger->blockSignals(true);
@@ -2967,8 +3047,8 @@ void TriggerMultiLineEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->groupBox_multiLineTrigger->blockSignals(true);
@@ -2988,8 +3068,8 @@ void TriggerLineMarginEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->spinBox_lineMargin->blockSignals(true);
@@ -3003,8 +3083,8 @@ void TriggerLineMarginEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggersMainArea->spinBox_lineMargin->blockSignals(true);
@@ -3025,8 +3105,7 @@ void TriggerLineEditPatternItemEditedCommand::undo()
         return;
     }
 
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
     mpScrollArea->ensureWidgetVisible(mpPatternItem);
 
@@ -3043,8 +3122,8 @@ void TriggerLineEditPatternItemEditedCommand::redo()
         return;
     }
 
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
     mpScrollArea->ensureWidgetVisible(mpPatternItem);
 
@@ -3067,8 +3146,7 @@ void TriggerLineEditPatternEditedCommand::undo()
         return;
     }
 
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggerPattern->singleLineTextEdit_pattern->blockSignals(true);
@@ -3092,8 +3170,8 @@ void TriggerLineEditPatternEditedCommand::redo()
         return;
     }
 
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpTriggerPattern->singleLineTextEdit_pattern->blockSignals(true);
@@ -3125,8 +3203,8 @@ void TriggerLineSpacerEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpPatternItem->spinBox_lineSpacer->blockSignals(true);
@@ -3140,8 +3218,8 @@ void TriggerLineSpacerEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     mpPatternItem->spinBox_lineSpacer->blockSignals(true);
@@ -3161,8 +3239,8 @@ void TriggerColorFGEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     QString styleSheet;
@@ -3195,8 +3273,8 @@ void TriggerColorFGEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
 
     QString styleSheet;
@@ -3235,8 +3313,8 @@ void TriggerColorBGEditedCommand::undo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
     mpScrollArea->ensureWidgetVisible(mpPatternItem);
     QString styleSheet;
@@ -3265,8 +3343,8 @@ void TriggerColorBGEditedCommand::redo()
     if (!mpItem || !mpEditor) {
         return;
     }
-    int id = mpItemTrigger->getID();
-    mpEditor->selectTriggerByID(id);
+    mItemID = mpItem->data(0, Qt::UserRole).toInt();
+    mpEditor->selectTriggerByID(mItemID);
     mpItem = mpTreeWidgetTriggers->currentItem();
     mpScrollArea->ensureWidgetVisible(mpPatternItem);
     QString styleSheet;

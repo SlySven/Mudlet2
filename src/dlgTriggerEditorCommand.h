@@ -34,6 +34,7 @@ private:
     TTreeWidget* mpTreeWidgetTriggers;
     bool mIsFolder;
     int mSiblingRow;
+    int mItemID;
 };
 
 class PasteTriggerCommand : public QUndoCommand
@@ -122,6 +123,7 @@ public:
     QModelIndex mParent;
     int mStart;
     int mEnd;
+    int mItemID;
 
 private:
     bool mIsFolder;
@@ -224,6 +226,7 @@ public:
     QModelIndex mParent;
     int mStart;
     int mEnd;
+    int mItemID;
 
 private:
     bool mIsFolder;
@@ -374,6 +377,7 @@ public:
     QModelIndex mParent;
     int mStart;
     int mEnd;
+    int mItemID;
 
 private:
     bool mIsFolder;
@@ -575,6 +579,7 @@ public:
     QModelIndex mParent;
     int mStart;
     int mEnd;
+    int mItemID;
 
 private:
     bool mIsFolder;
@@ -728,6 +733,7 @@ public:
     QModelIndex mParent;
     int mStart;
     int mEnd;
+    int mItemID;
 
 private:
     QPointer<Host> mpHost;
@@ -881,6 +887,7 @@ public:
     QModelIndex mParent;
     int mStart;
     int mEnd;
+    int mItemID;
 
 private:
     QPointer<Host> mpHost;
@@ -1057,6 +1064,7 @@ public:
     TTrigger* mpItemTrigger;
     QString mPrevLineEditTriggerName;
     QString mLineEditTriggerName;
+    int mItemID;
 };
 
 class TriggerCommandTextEditedCommand : public QUndoCommand
@@ -1073,6 +1081,7 @@ public:
     QPointer<Host> mpHost;
     QString mPrevLineEditTriggerCommand;
     QString mLineEditTriggerCommand;
+    int mItemID;
 };
 
 class TriggerFireLengthEditedCommand : public QUndoCommand
@@ -1089,6 +1098,7 @@ public:
     QPointer<Host> mpHost;
     int mPrevFireLength;
     int mFireLength;
+    int mItemID;
 };
 
 class TriggerPlaySoundEditedCommand : public QUndoCommand
@@ -1105,6 +1115,7 @@ public:
     QPointer<Host> mpHost;
     bool mPrevGroupBoxSoundTrigger;
     bool mGroupBoxSoundTrigger;
+    int mItemID;
 };
 
 class TriggerPlaySoundFileEditedCommand : public QUndoCommand
@@ -1121,6 +1132,7 @@ public:
     TTrigger* mpItemTrigger;
     QString mPrevLineEditSoundFile;
     QString mLineEditSoundFile;
+    int mItemID;
 };
 
 class TriggerColorizerEditedCommand : public QUndoCommand
@@ -1137,6 +1149,7 @@ public:
     TTrigger* mpItemTrigger;
     bool mPrevBoxTriggerColorizer;
     bool mBoxTriggerColorizer;
+    int mItemID;
 };
 
 class TriggerColorizerBgColorEditedCommand : public QUndoCommand
@@ -1153,6 +1166,7 @@ public:
     TTrigger* mpItemTrigger;
     QString mPrevbgColor;
     QString mBgColor;
+    int mItemID;
 };
 
 class TriggerColorizerFgColorEditedCommand : public QUndoCommand
@@ -1169,6 +1183,7 @@ public:
     TTrigger* mpItemTrigger;
     QString mPrevfgColor;
     QString mFgColor;
+    int mItemID;
 };
 
 class TriggerPerlSlashGOptionEditedCommand : public QUndoCommand
@@ -1185,6 +1200,7 @@ public:
     TTrigger* mpItemTrigger;
     bool mPrevPerlSlashGOption;
     bool mPerlSlashGOption;
+    int mItemID;
 };
 
 class TriggerGroupFilterEditedCommand : public QUndoCommand
@@ -1201,6 +1217,7 @@ public:
     TTrigger* mpItemTrigger;
     bool mPrevFilterTrigger;
     bool mFilterTrigger;
+    int mItemID;
 };
 
 class TriggerMultiLineEditedCommand : public QUndoCommand
@@ -1217,6 +1234,7 @@ public:
     TTrigger* mpItemTrigger;
     bool mPrevMultiLineTrigger;
     bool mMultiLineTrigger;
+    int mItemID;
 };
 
 class TriggerLineMarginEditedCommand : public QUndoCommand
@@ -1233,6 +1251,7 @@ public:
     TTrigger* mpItemTrigger;
     int mPrevLineMargin;
     int mLineMargin;
+    int mItemID;
 };
 
 class TriggerLineEditPatternItemEditedCommand : public QUndoCommand
@@ -1253,6 +1272,7 @@ public:
     int mPrevTriggerPatternEdit;
     int mTriggerPatternEdit;
     int mRow;
+    int mItemID;
 
 private:
     QPointer<Host> mpHost;
@@ -1276,6 +1296,7 @@ public:
     QString mPrevLineEditTriggerPattern;
     QString mLineEditTriggerPattern;
     int mRow;
+    int mItemID;
 };
 
 class TriggerLineSpacerEditedCommand : public QUndoCommand
@@ -1293,6 +1314,7 @@ public:
     QPointer<Host> mpHost;
     int mPrevLineSpacer;
     int mLineSpacer;
+    int mItemID;
 };
 
 class TriggerColorFGEditedCommand : public QUndoCommand
@@ -1315,6 +1337,7 @@ public:
     int mPrevColorTriggerFgAnsi;
     int mColorTriggerFgAnsi;
     int mRow;
+    int mItemID;
 
 private:
     QPointer<Host> mpHost;
@@ -1338,6 +1361,7 @@ public:
     QColor mColorTriggerBgColor;
     int mPrevColorTriggerBgAnsi;
     int mColorTriggerBgAnsi;
+    int mItemID;
 
 private:
     QPointer<Host> mpHost;
