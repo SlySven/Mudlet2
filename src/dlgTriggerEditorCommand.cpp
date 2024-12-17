@@ -285,7 +285,7 @@ void MoveTriggerCommand::undo()
 
 void MoveTriggerCommand::redo()
 {
-    if(!mpEditor){
+    if (!mpEditor) {
         return;
     }
     mItemID = mpItem->data(0, Qt::UserRole).toInt();
@@ -562,7 +562,7 @@ void MoveAliasCommand::undo()
 
 void MoveAliasCommand::redo()
 {
-    if(!mpEditor){
+    if (!mpEditor) {
         return;
     }
     mItemID = mpItem->data(0, Qt::UserRole).toInt();
@@ -947,7 +947,7 @@ void MoveTimerCommand::undo()
 
 void MoveTimerCommand::redo()
 {
-    if(!mpEditor){
+    if (!mpEditor) {
         return;
     }
     mItemID = mpItem->data(0, Qt::UserRole).toInt();
@@ -1434,7 +1434,7 @@ void MoveScriptCommand::undo()
 
 void MoveScriptCommand::redo()
 {
-    if(!mpEditor){
+    if (!mpEditor) {
         return;
     }
     mItemID = mpItem->data(0, Qt::UserRole).toInt();
@@ -1816,7 +1816,7 @@ void MoveKeyCommand::undo()
 
 void MoveKeyCommand::redo()
 {
-    if(!mpEditor){
+    if (!mpEditor) {
         return;
     }
     mItemID = mpItem->data(0, Qt::UserRole).toInt();
@@ -2220,7 +2220,7 @@ void MoveActionCommand::undo()
 
 void MoveActionCommand::redo()
 {
-    if(!mpEditor){
+    if (!mpEditor) {
         return;
     }
     mItemID = mpItem->data(0, Qt::UserRole).toInt();
